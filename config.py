@@ -1,6 +1,12 @@
 Labels = ["PM2.5", "PM10", "O3"]
 
-NUM_EPOCH = 1
+USE_GPU = False
+
+# the epoch for all local station training
+TOTAL_EPOCH = 2
+
+# the epoch for one local station training
+NUM_EPOCH = 10
 
 BATCH_SIZE = 16 # The number of records within a batch
 ACTUALL_BATCH_SIZE = BATCH_SIZE # The actuall batch size for lstm (due to sequence generation, now is deprecated)
@@ -37,3 +43,4 @@ PREDICT_LAYER_HIDDEN_SIZE = 100
 import tensorflow as tf
 Initializer = tf.keras.initializers.he_uniform()
 
+UniformInitializer = tf.initializers.variance_scaling(distribution='uniform')

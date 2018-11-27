@@ -35,8 +35,8 @@ def predict_layer(inputs, hidden_size = PREDICT_LAYER_HIDDEN_SIZE):
     with tf.variable_scope("predict_layer"):
         inputs_length = inputs.get_shape()[1]
         inputs_size = inputs.get_shape()[0]
-        weight = tf.get_variable("vector_weight", [inputs_length, len(Labels)], )
-        bias = tf.get_variable("bias", [len(Labels), ])
+        weight = tf.get_variable("vector_weight", [inputs_length, len(Labels)], initializer = Initializer)
+        bias = tf.get_variable("bias", [len(Labels), ], initializer = Initializer)
         # outputs = tf.tensordot(inputs, weight, [[1], [0]])
         outputs = tf.matmul(inputs, weight)
         outputs = tf.add(outputs, bias)
@@ -57,14 +57,14 @@ def get_attention_raw_score(inputs, local_inputs, batch_size, hidden_size1, hidd
 
         # Assuming The inputs and local_inputs has the same dimension,
         # so we have hidden_size * 2 as our first dimension of weight1
-        weight1 = tf.get_variable("weight1", [hidden_size1 + hidden_size2, ATTENTION_HIDDEN_SIZE])
-        bias = tf.get_variable("bias", [ATTENTION_HIDDEN_SIZE])
+        weight1 = tf.get_variable("weight1", [hidden_size1 + hidden_size2, ATTENTION_HIDDEN_SIZE], initializer = Initializer)
+        bias = tf.get_variable("bias", [ATTENTION_HIDDEN_SIZE], initializer = Initializer)
         layer1 = tf.nn.relu(tf.nn.bias_add(tf.matmul(feed_inputs, weight1), bias))
 
         # U to project the vector to a value
-        u = tf.get_variable("u_vecotr", [ATTENTION_HIDDEN_SIZE, ])
+        u = tf.get_variable("u_vecotr", [ATTENTION_HIDDEN_SIZE, ], initializer = Initializer)
         # Notice bias is always the last dimension value in wieght's shape
-        bias2 = tf.get_variable("bias2", [1])
+        bias2 = tf.get_variable("bias2", [1], initializer = Initializer)
         output = tf.add(tf.tensordot(layer1, u, [[1], [0]]), bias2)
 
         return output
@@ -76,14 +76,14 @@ def get_attention_raw_score_solely(inputs, batch_size, hidden_size):
 
         # Assuming The inputs and local_inputs has the same dimension,
         # so we have hidden_size * 2 as our first dimension of weight1
-        weight1 = tf.get_variable("weight1", [hidden_size, ATTENTION_HIDDEN_SIZE])
-        bias = tf.get_variable("bias", [ATTENTION_HIDDEN_SIZE])
+        weight1 = tf.get_variable("weight1", [hidden_size, ATTENTION_HIDDEN_SIZE], initializer = Initializer)
+        bias = tf.get_variable("bias", [ATTENTION_HIDDEN_SIZE], initializer = Initializer)
         layer1 = tf.nn.relu(tf.nn.bias_add(tf.matmul(inputs, weight1), bias))
 
         # U to project the vector to a value
-        u = tf.get_variable("u_vecotr", [ATTENTION_HIDDEN_SIZE, ])
+        u = tf.get_variable("u_vecotr", [ATTENTION_HIDDEN_SIZE, ], initializer = Initializer)
         # Notice bias is always the last dimension value in wieght's shape
-        bias2 = tf.get_variable("bias2", [1])
+        bias2 = tf.get_variable("bias2", [1], initializer = Initializer)
         output = tf.add(tf.tensordot(layer1, u, [[1], [0]]), bias2)
 
         return output
@@ -148,7 +148,11 @@ def attention_layer_uni_input(station_inputs, batch_size, hidden_size):
 class LSTM_model(object):
     def __init__(self, inputs, batch_size=BATCH_SIZE, state_size=LSTM_HIDDEN_SIZE, layer_num=2, num_steps=NUM_STEPS,
                  feature_num=AIR_FEATURE_NUM):
-        stacked_cell = tf.nn.rnn_cell.MultiRNNCell([tf.nn.rnn_cell.LSTMCell(state_size) \
+        if USE_GPU:
+            stacked_cell = tf.contrib.cudnn_rnn.CudnnLSTM(2, state_size, kernel_initializer = UniformInitializer,
+                                                        bias_initializer = UniformInitializer)
+        else:
+            stacked_cell = tf.nn.rnn_cell.MultiRNNCell([tf.nn.rnn_cell.LSTMCell(state_size) \
                                                     for _ in range(layer_num)])
 
         self.inputs = inputs

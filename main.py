@@ -285,31 +285,32 @@ def main():
 
         step = 0
 
+        for epoch_idx in range(TOTAL_EPOCH):
+            print("total epoch :", epoch_idx)
+            # For every station, run NUM_EPOCH baches
+            for station_idx in range(AIR_STATION_NUM):
+                # data are all in batches, the first dimension is batch size
+                air_locations_feed = np_air_locations_shared_fc_feed[station_idx]
+                weather_location_feed = np_weather_locations_shared_fc_feed[station_idx]
+                # pass a array with all air lstm datas
+                # the only one we can reuse
+                air_qualities_feed = np_air_lstm_datas
+                # weather_feed: array element length is grid_weather_station_num
+                # we have to choose this data by station id, because the around weather data changed with local station
+                weather_feed = np_weather_lstm_datas[station_idx]
+                targets = np_Y[station_idx]
 
-        # For every station, run NUM_EPOCH baches
-        for station_idx in range(AIR_STATION_NUM):
-            # data are all in batches, the first dimension is batch size
-            air_locations_feed = np_air_locations_shared_fc_feed[station_idx]
-            weather_location_feed = np_weather_locations_shared_fc_feed[station_idx]
-            # pass a array with all air lstm datas
-            # the only one we can reuse
-            air_qualities_feed = np_air_lstm_datas
-            #weather_feed: array element length is grid_weather_station_num
-            # we have to choose this data by station id, because the around weather data changed with local station
-            weather_feed = np_weather_lstm_datas[station_idx]
-            targets = np_Y[station_idx]
+                print("targets shape")
+                print(np.shape(targets))
 
-            print("targets shape")
-            print(np.shape(targets))
+                for i in range(NUM_EPOCH):
+                    print("In iteration ", i)
 
-            for i in range(NUM_EPOCH):
-                print("In iteration ", i)
-
-                step, total_cost = run_epoch(sess, train_model, BATCH_COUNT, train_model.train_op, True, step,
-                                     air_locations_feed, weather_location_feed, air_qualities_feed,
-                                     weather_feed, targets, station_idx)
-                print("Step: ", step)
-                print(total_cost)
+                    step, total_cost = run_epoch(sess, train_model, BATCH_COUNT, train_model.train_op, True, step,
+                                                 air_locations_feed, weather_location_feed, air_qualities_feed,
+                                                 weather_feed, targets, station_idx)
+                    print("Step: ", step)
+                    print(total_cost)
 
 
 main()
