@@ -166,18 +166,18 @@ class FModel(object):
         # self.local_high_level_fc_output =  high_level_fc([self.local_fc_output, self.local_air_lstm.output])
         # Do we still need this layer?
         # self.local_high_level_fc_output = high_level_fc(self.local_air_lstm.output)
-        with tf.variable_scope("air_high_level_fc"):
+        with tf.variable_scope("air_high_level_fc", reuse = tf.AUTO_REUSE):
             self.air_high_level_fc_outputs = []
             for i in range(AIR_STATION_NUM):
-                with tf.variable_scope("air_higle_level_fc-" + str(i)):
+                with tf.variable_scope("air_higle_level_fc"):
                     air_high_level_fc_inputs = tf.concat([self.air_location_fc_outputs[i],
                                                           self.air_lstms[i].output], axis=1)
                     self.air_high_level_fc_outputs.append(high_level_fc(air_high_level_fc_inputs))
 
-        with tf.variable_scope("weather_high_level_fc"):
+        with tf.variable_scope("weather_high_level_fc", reuse = tf.AUTO_REUSE):
             self.weather_high_level_fc_outputs = []
             for i in range(GRID_WEAtHER_STATION_NUM):
-                with tf.variable_scope("weather_high_level_fc-" + str(i)):
+                with tf.variable_scope("weather_high_level_fc"):
                     weather_high_level_fc_inputs = tf.concat([self.weather_location_fc_outputs[i],
                                                               self.weather_lstms[i].output], axis=1)
                     self.weather_high_level_fc_outputs.append(high_level_fc(weather_high_level_fc_inputs))
@@ -210,7 +210,7 @@ class FModel(object):
             loss, tf.train.get_global_step(), optimizer="Adam", learning_rate=0.01)
 
         # average cost
-        self.cost = tf.reduce_sum(loss) / BATCH_SIZE
+        self.cost = tf.reduce_sum(loss)
 
 
 def run_epoch(session, model, batch_count, train_op, output_log, step,
@@ -221,13 +221,12 @@ def run_epoch(session, model, batch_count, train_op, output_log, step,
 
     for batch_idx in range(batch_count):
 
-        print(np.shape(air_locations_feed))
-        print(np.shape(air_qualities_feed))
-        print(np.shape(weather_location_feed))
-        print(np.shape(weather_feed))
-        print(np.shape(targets))
-
-        print(np.shape(targets[batch_idx]))
+        # print(np.shape(air_locations_feed))
+        # print(np.shape(air_qualities_feed))
+        # print(np.shape(weather_location_feed))
+        # print(np.shape(weather_feed))
+        # print(np.shape(targets))
+        # print(np.shape(targets[batch_idx]))
 
         cost, _, output = session.run([model.cost, train_op, model.results],
                                        {model.local_air_lstm_inputs: air_qualities_feed[station_idx][batch_idx],
@@ -244,6 +243,7 @@ def run_epoch(session, model, batch_count, train_op, output_log, step,
         print(iters)
         print(cost)
         print(output)
+        print(targets[batch_idx])
 
         total_costs += cost
 

@@ -29,5 +29,10 @@ LOCATION_FEATURE_NUM = 2
 
 ATTENTION_HIDDEN_SIZE = 100
 
+
+
 PREDICT_LAYER_HIDDEN_SIZE = 100
+
+import tensorflow as tf
+Initializer = tf.keras.initializers.he_uniform()
 

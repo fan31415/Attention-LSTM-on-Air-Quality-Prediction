@@ -79,8 +79,10 @@ def generate_air_quality_lstm_data(inputs, batch_size, num_steps):
 
     sequence_Y = []
 
+    sequence_count = row_count
     for i in range(take_count):
         if i > take_count - num_steps:
+            sequence_count = i
             break
         sequence_X.append(input_X[i:i + num_steps])
         # Y start already earlier than X one hour, so here we should minus 1, it will get the correspond Y for X
@@ -88,7 +90,7 @@ def generate_air_quality_lstm_data(inputs, batch_size, num_steps):
 
     # Make Batch
     # batch_size is the actuall training records' batch size
-    batch_count, actuall_count = getBatchCount(row_count)
+    batch_count, actuall_count = getBatchCount(sequence_count)
 
 
     # clip the margin data
@@ -124,15 +126,16 @@ def generate_weather_lstm_data(inputs, batch_size, num_steps):
 
     #     Arrange X into sequence list
     sequence_X = []
-
+    sequence_count = row_count
     for i in range(take_count):
         if i > take_count - num_steps:
+            sequence_count = i
             break
         sequence_X.append(input_X[i:i + num_steps])
 
     # Make Batch
     # batch_size is the actuall training records' batch size
-    batch_count, actuall_count = getBatchCount(row_count)
+    batch_count, actuall_count = getBatchCount(sequence_count)
 
 
     # clip the margin data
