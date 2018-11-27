@@ -144,18 +144,18 @@ class FModel(object):
 
 
         with tf.variable_scope("loccal_air_lstm", reuse=tf.AUTO_REUSE) as scope:
-            self.local_air_lstm = LSTM_model(self.local_air_lstm_inputs)
+            self.local_air_lstm = LSTM_model(self.local_air_lstm_inputs, feature_num=AIR_FEATURE_NUM)
 
         # share parametes between them
         with tf.variable_scope("air_lstm", reuse=tf.AUTO_REUSE):
             self.air_lstms = []
             for i in range(AIR_STATION_NUM):
-                self.air_lstms.append(LSTM_model(self.air_lstm_inputs[i]))
+                self.air_lstms.append(LSTM_model(self.air_lstm_inputs[i], feature_num=AIR_FEATURE_NUM))
         # share parametes between them
         with tf.variable_scope("weather_lstm", reuse=tf.AUTO_REUSE):
             self.weather_lstms = []
             for i in range(GRID_WEAtHER_STATION_NUM):
-                self.weather_lstms.append(LSTM_model(self.weather_lstm_inputs[i]))
+                self.weather_lstms.append(LSTM_model(self.weather_lstm_inputs[i], feature_num=WEATHER_FEATURE_NUM))
         # share parametes between them
         with tf.variable_scope("location_fc", reuse=tf.AUTO_REUSE):
             # with tf.variable_scope("local"):
