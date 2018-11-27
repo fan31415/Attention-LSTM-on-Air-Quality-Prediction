@@ -12,21 +12,21 @@ from config import *
 def location_FC(inputs, hidden_size = LOCAL_FC_HIDDEN_SIZE):
     with tf.variable_scope("location_fc"):
         # local locations will be changed after a long batch period in datasets
-        location_fc_output = tf.contrib.layers.fully_connected(inputs, hidden_size, initializer = Initializer)
+        location_fc_output = tf.contrib.layers.fully_connected(inputs, hidden_size)
     return location_fc_output
 
 
 # Maybe we can share parameters between local and shared?
 def high_level_fc(inputs, hidden_size = HIGH_LEVEL_FC_HIDDEN_SIZE):
     with tf.variable_scope('high_level_fc'):
-        layer1 = tf.contrib.layers.fully_connected(inputs, hidden_size, initializer = Initializer)
-        outputs = tf.contrib.layers.fully_connected(layer1, hidden_size, initializer = Initializer)
+        layer1 = tf.contrib.layers.fully_connected(inputs, hidden_size)
+        outputs = tf.contrib.layers.fully_connected(layer1, hidden_size)
     return outputs
 
 # only one fusion model, no need to share parameters
 def fusion_fc_layer(inputs, hidden_size = FUSION_LAYER_HIDDEN_SIZE):
     with tf.variable_scope("fusion_layer_fc"):
-        outputs = tf.contrib.layers.fully_connected(inputs, hidden_size, initializer = Initializer)
+        outputs = tf.contrib.layers.fully_connected(inputs, hidden_size)
     return outputs
 
 # inputs shape is [batch_size, hidden_size]
@@ -35,8 +35,8 @@ def predict_layer(inputs, hidden_size = PREDICT_LAYER_HIDDEN_SIZE):
     with tf.variable_scope("predict_layer"):
         inputs_length = inputs.get_shape()[1]
         inputs_size = inputs.get_shape()[0]
-        weight = tf.get_variable("vector_weight", [inputs_length, len(Labels)], initializer = Initializer)
-        bias = tf.get_variable("bias", [len(Labels), ], initializer = Initializer)
+        weight = tf.get_variable("vector_weight", [inputs_length, len(Labels)])
+        bias = tf.get_variable("bias", [len(Labels), ])
         # outputs = tf.tensordot(inputs, weight, [[1], [0]])
         outputs = tf.matmul(inputs, weight)
         outputs = tf.add(outputs, bias)
