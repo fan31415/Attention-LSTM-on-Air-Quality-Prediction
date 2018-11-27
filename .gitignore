@@ -12,6 +12,7 @@ __pycache__/
 *.so
 
 # Distribution / packaging
+.idea/
 datapack_5002/
 .Python
 build/
