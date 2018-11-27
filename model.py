@@ -153,9 +153,10 @@ class LSTM_model(object):
             cell = tf.contrib.cudnn_rnn.CudnnLSTM(2, state_size, kernel_initializer = UniformInitializer,
                                                         bias_initializer = UniformInitializer)
             self.init_state = tf.get_variable('initial_state',
-                                              tf.random_uniform(cell.state_shape(batch_size)))
+                                              [tf.random_uniform(cell.state_shape(batch_size)[0]),
+                                               tf.random_uniform(cell.state_shape(batch_size)[1])])
             state = self.init_state
-            outputs, state = cell(self.inputs, input_h=state)
+            outputs, state = cell(self.inputs, input_h=state[0], input_c=state[1])
         else:
             stacked_cell = tf.nn.rnn_cell.MultiRNNCell([tf.nn.rnn_cell.LSTMCell(state_size) \
                                                         for _ in range(layer_num)])
