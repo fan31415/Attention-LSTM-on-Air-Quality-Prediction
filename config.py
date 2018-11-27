@@ -1,8 +1,8 @@
 Labels = ["PM2.5", "PM10", "O3"]
 
-USE_GPU = True
+USE_GPU = False
 
-
+LEARNING_RATE = 0.009
 
 # the epoch for all local station training
 TOTAL_EPOCH = 2

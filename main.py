@@ -211,12 +211,15 @@ class FModel(object):
 
         self.results = predict_layer(fusion_fc_outputs)
 
-        loss = tf.losses.mean_squared_error(labels=self.targets, predictions=self.results)
-        self.train_op = tf.contrib.layers.optimize_loss(
-            loss, tf.train.get_global_step(), optimizer="Adam", learning_rate=0.01)
+        # loss = tf.losses.mean_squared_error(labels=self.targets, predictions=self.results)
 
+        losses = tf.square(tf.subtract(self.targets, self.results))
         # average cost
-        self.cost = tf.reduce_sum(loss)
+        self.cost = tf.div(tf.reduce_sum(losses), BATCH_SIZE)
+        # self.train_op = tf.contrib.layers.optimize_loss(
+        #     loss, tf.train.get_global_step(), optimizer="Adam", learning_rate=0.01)
+
+        self.train_op = tf.train.AdamOptimizer(LEARNING_RATE).minimize(self.cost)
 
 
 def run_epoch(session, model, batch_count, train_op, output_log, step,
@@ -312,7 +315,7 @@ def main():
                                                  air_locations_feed, weather_location_feed, air_qualities_feed,
                                                  weather_feed, targets, station_idx)
                     print("Step: ", step)
-                    print(total_cost)
+                    print(total_cost/BATCH_COUNT)
                     saver.save(sess, 'my_model.model', global_step=step)
 
 
