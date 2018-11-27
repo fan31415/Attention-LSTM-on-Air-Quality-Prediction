@@ -35,7 +35,7 @@ def predict_layer(inputs, hidden_size = PREDICT_LAYER_HIDDEN_SIZE):
     with tf.variable_scope("predict_layer"):
         inputs_length = inputs.get_shape()[1]
         inputs_size = inputs.get_shape()[0]
-        weight = tf.get_variable("vector_weight", [inputs_length, len(Labels)])
+        weight = tf.get_variable("vector_weight", [inputs_length, len(Labels)], )
         bias = tf.get_variable("bias", [len(Labels), ])
         # outputs = tf.tensordot(inputs, weight, [[1], [0]])
         outputs = tf.matmul(inputs, weight)

@@ -232,10 +232,9 @@ def run_epoch(session, model, batch_count, train_op, output_log, step,
         # print(np.shape(weather_location_feed))
         # print(np.shape(weather_feed))
         # print(np.shape(targets))
-        # print(np.shape(targets[batch_idx]))
 
         cost, _, output = session.run([model.cost, train_op, model.results],
-                                       {model.local_air_lstm_inputs: air_qualities_feed[station_idx][batch_idx],
+                                       {model.local_air_lstm_inputs: air_qualities_feed[batch_idx][station_idx],
                                         # the input below is all list of batch data
                                         model.air_fc_inputs: air_locations_feed[batch_idx],
                                         model.air_lstm_inputs: air_qualities_feed[batch_idx],
@@ -248,8 +247,8 @@ def run_epoch(session, model, batch_count, train_op, output_log, step,
         iters += 1
         print(iters)
         print(cost)
-        print(output)
-        print(targets[batch_idx])
+        # print(output)
+        # print(targets[batch_idx])
 
         total_costs += cost
 
