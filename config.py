@@ -5,7 +5,7 @@ USE_GPU = False
 LEARNING_RATE = 0.009
 
 # the epoch for all local station training
-TOTAL_EPOCH = 2
+TOTAL_EPOCH = 10
 
 # the epoch for one local station training
 NUM_EPOCH = 10

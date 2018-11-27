@@ -213,9 +213,10 @@ class FModel(object):
 
         # loss = tf.losses.mean_squared_error(labels=self.targets, predictions=self.results)
 
-        losses = tf.square(tf.subtract(self.targets, self.results))
+        self.losses = tf.square(tf.subtract(self.targets, self.results))
+
         # average cost
-        self.cost = tf.div(tf.reduce_sum(losses), BATCH_SIZE)
+        self.cost = tf.div(tf.reduce_sum(self.losses), BATCH_SIZE)
         # self.train_op = tf.contrib.layers.optimize_loss(
         #     loss, tf.train.get_global_step(), optimizer="Adam", learning_rate=0.01)
 
@@ -236,7 +237,7 @@ def run_epoch(session, model, batch_count, train_op, output_log, step,
         # print(np.shape(weather_feed))
         # print(np.shape(targets))
 
-        cost, _, output = session.run([model.cost, train_op, model.results],
+        cost, _, output, losses = session.run([model.cost, train_op, model.results, model.losses],
                                        {model.local_air_lstm_inputs: air_qualities_feed[batch_idx][station_idx],
                                         # the input below is all list of batch data
                                         model.air_fc_inputs: air_locations_feed[batch_idx],
@@ -250,7 +251,8 @@ def run_epoch(session, model, batch_count, train_op, output_log, step,
         iters += 1
         print(iters)
         print(cost)
-        print(output)
+        # print(losses)
+        # print(output)
         # print(targets[batch_idx])
 
         total_costs += cost
