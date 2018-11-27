@@ -152,10 +152,10 @@ class LSTM_model(object):
         if USE_GPU:
             cell = tf.contrib.cudnn_rnn.CudnnLSTM(2, state_size, kernel_initializer = UniformInitializer,
                                                         bias_initializer = UniformInitializer)
-            self.init_state = cell.get_weights()
+            self.init_state = tf.get_variable('initial_state',
+                                              tf.random_uniform(cell.state_shape(batch_size)))
             state = self.init_state
-            cell.set_weights(state)
-            outpus, state = cell(self.inputs)
+            outputs, state = cell(self.inputs, input_h=state)
         else:
             stacked_cell = tf.nn.rnn_cell.MultiRNNCell([tf.nn.rnn_cell.LSTMCell(state_size) \
                                                         for _ in range(layer_num)])
