@@ -161,7 +161,7 @@ class LSTM_model(object):
 
             # state = self.init_state
 
-            outputs = cell(self.inputs)
+            outputs, _ = cell(self.inputs)
         else:
             stacked_cell = tf.nn.rnn_cell.MultiRNNCell([tf.nn.rnn_cell.LSTMCell(state_size) \
                                                         for _ in range(layer_num)])
