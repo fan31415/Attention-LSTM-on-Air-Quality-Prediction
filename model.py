@@ -156,7 +156,7 @@ class LSTM_model(object):
                                               [tf.random_uniform(cell.state_shape(batch_size)[0]),
                                                tf.random_uniform(cell.state_shape(batch_size)[1])])
             state = self.init_state
-            outputs, state = cell(self.inputs, input_h=state[0], input_c=state[1])
+            outputs, state[0], state[1] = cell(self.inputs, input_h=state[0], input_c=state[1])
         else:
             stacked_cell = tf.nn.rnn_cell.MultiRNNCell([tf.nn.rnn_cell.LSTMCell(state_size) \
                                                         for _ in range(layer_num)])
