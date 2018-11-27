@@ -316,7 +316,7 @@ def main():
                                                  weather_feed, targets, station_idx)
                     print("Step: ", step)
                     print(total_cost/BATCH_COUNT)
-                    saver.save(sess, 'my_model.model', global_step=step)
+                    saver.save(sess, './my_model.model', global_step=step)
 
 
 main()
