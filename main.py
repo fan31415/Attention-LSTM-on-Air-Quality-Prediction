@@ -56,6 +56,7 @@ for idx, locations in enumerate(grid_location_by_station):
     grid_location_by_station[idx] = scaler.fit_transform(locations[['dist', 'direction']])
 
 
+
 # generate air lstm data
 air_lstm_datas= [None] * AIR_STATION_NUM
 Y = [None] * AIR_STATION_NUM
@@ -69,6 +70,11 @@ for i in range(AIR_STATION_NUM):
         weather_lstm_datas[i][j] = generate_weather_lstm_data(grid_weathers_around_station[i][j], BATCH_SIZE, NUM_STEPS)
 
 
+# define BATCH_COUNT in global config here
+# the locaton batch rely on this too
+BATCH_COUNT = len(air_lstm_datas[0])
+print("BATCH_C ", BATCH_COUNT)
+
 train_length = len(air_qualities[0])-1
 
 
@@ -81,7 +87,7 @@ for i in range(AIR_STATION_NUM):
         # feed_data = tf.concat([copy_enlarge_vector(pair[0], train_length), copy_enlarge_vector(pair[1], train_length)],
         #                       axis=1)
         # Notice this function has consider real count difference, so we need to plus 1 here
-        air_locations_shared_fc_feed[i].append(generate_location_batch_data(pair, train_length+1))
+        air_locations_shared_fc_feed[i].append(generate_location_batch_data(pair, BATCH_COUNT, train_length+1))
 
 
 # generate data for grid weather station location
@@ -89,7 +95,7 @@ weather_locations_shared_fc_feed = [None] * AIR_STATION_NUM
 for i in range(AIR_STATION_NUM):
     weather_locations_shared_fc_feed[i] = []
     for pair in np.array(grid_location_by_station[i]):
-        feed_data = generate_location_batch_data(pair, train_length+1)
+        feed_data = generate_location_batch_data(pair, BATCH_COUNT, train_length+1)
         weather_locations_shared_fc_feed[i].append(feed_data)
 
 
@@ -251,11 +257,12 @@ def run_epoch(session, model, batch_count, train_op, output_log, step,
     return step, total_costs
 
 
+
 def main():
     # The only place define batch count, this should be edit accordingly by BATCH_SIZE
+    # define BATCH_COUNT HERE
 
-    BATCH_COUNT, _ = getBatchCount(len(air_qualities[0]))
-    print("BATCH_C ", BATCH_COUNT)
+
 
     # [AIR_STATION_NUM (total data by station), DATA_NUM (in one total train), BATCH_COUNT, BATCH_SIZE, FEATURE_NUM)]
     # swap axes so that we can first choose data by trained local station, then get data by bacth_idx

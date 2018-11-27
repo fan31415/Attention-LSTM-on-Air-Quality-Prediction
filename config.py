@@ -2,7 +2,7 @@ Labels = ["PM2.5", "PM10", "O3"]
 
 NUM_EPOCH = 1
 
-BATCH_SIZE = 96 # The number of records within a batch
+BATCH_SIZE = 16 # The number of records within a batch
 ACTUALL_BATCH_SIZE = BATCH_SIZE # The actuall batch size for lstm (due to sequence generation, now is deprecated)
 NUM_STEPS = 48 # the cut off steps for one time back-prop process
 TRAINING_STEPS = 10000 # the epoch number of training
@@ -32,6 +32,7 @@ ATTENTION_HIDDEN_SIZE = 100
 
 
 PREDICT_LAYER_HIDDEN_SIZE = 100
+
 
 import tensorflow as tf
 Initializer = tf.keras.initializers.he_uniform()

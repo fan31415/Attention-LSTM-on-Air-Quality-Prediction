@@ -35,10 +35,12 @@ def copy_enlarge_vector(inputs, sequence_length):
     sequence= np.tile(inputs, [sequence_length, 1])
     return sequence
 
-def generate_location_batch_data(inputs, sequence_length):
+def generate_location_batch_data(inputs, batch_count, sequence_length):
 
     long_vector = copy_enlarge_vector(inputs, sequence_length)
-    batch_count, actuall_count = getBatchCount(sequence_length)
+    # Notice that batch count should consider lstm feed data's num_steps's integrity
+    # batch_count, actuall_count = getBatchCount(sequence_length)
+    actuall_count = batch_count * BATCH_SIZE
     long_vector = long_vector[: actuall_count]
     data = np.split(long_vector, batch_count)
     return data
@@ -91,7 +93,7 @@ def generate_air_quality_lstm_data(inputs, batch_size, num_steps):
     # Make Batch
     # batch_size is the actuall training records' batch size
     batch_count, actuall_count = getBatchCount(sequence_count)
-
+    # print(batch_count)
 
     # clip the margin data
 
@@ -110,7 +112,15 @@ def generate_weather_lstm_data(inputs, batch_size, num_steps):
 
     row_count = inputs.shape[0]
 
+    # Notcie weather data longer than air quality two days
+    row_count = row_count - 48
+    inputs = inputs[:-48]
+
     take_count = row_count - 1
+
+
+    # inputs = inputs.iloc()
+
 
     # print("take count ", take_count)
 
@@ -118,6 +128,7 @@ def generate_weather_lstm_data(inputs, batch_size, num_steps):
 
     # The last time data will be one of our predictions, so will not include in our input_X
     # To make input X has proper shape, I start the index from n-1
+
     input_X = inputs.iloc[- take_count - 1: - 1]
 
     # Normalized Data
@@ -136,7 +147,6 @@ def generate_weather_lstm_data(inputs, batch_size, num_steps):
     # Make Batch
     # batch_size is the actuall training records' batch size
     batch_count, actuall_count = getBatchCount(sequence_count)
-
 
     # clip the margin data
 

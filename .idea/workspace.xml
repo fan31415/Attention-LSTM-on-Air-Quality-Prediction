@@ -2,12 +2,10 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="f6a534f7-e904-4888-8034-643ebefa082c" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/config.py" beforeDir="false" afterPath="$PROJECT_DIR$/config.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/dataHelper.py" beforeDir="false" afterPath="$PROJECT_DIR$/dataHelper.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/model.py" beforeDir="false" afterPath="$PROJECT_DIR$/model.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -40,24 +38,24 @@
       <usages-collector id="statistics.file.extensions.edit">
         <counts>
           <entry key="dummy" value="37" />
-          <entry key="py" value="15619" />
+          <entry key="py" value="16224" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.file.types.edit">
         <counts>
           <entry key="PLAIN_TEXT" value="37" />
-          <entry key="Python" value="15619" />
+          <entry key="Python" value="16224" />
         </counts>
       </usages-collector>
     </session>
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file pinned="false" current-in-tab="true">
+      <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/main.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-771">
-              <caret line="212" column="39" selection-start-line="212" selection-start-column="39" selection-end-line="212" selection-end-column="39" />
+            <state relative-caret-position="157">
+              <caret line="251" column="42" selection-start-line="251" selection-start-column="42" selection-end-line="251" selection-end-column="42" />
               <folding>
                 <element signature="e#0#23#0" expanded="true" />
               </folding>
@@ -78,8 +76,8 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/config.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="68">
-              <caret line="4" column="15" selection-start-line="4" selection-start-column="15" selection-end-line="4" selection-end-column="15" />
+            <state relative-caret-position="373">
+              <caret line="35" column="15" selection-start-line="35" selection-start-column="15" selection-end-line="35" selection-end-column="15" />
             </state>
           </provider>
         </entry>
@@ -87,26 +85,26 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/model.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="1827">
-              <caret line="114" column="21" lean-forward="true" selection-start-line="114" selection-start-column="21" selection-end-line="114" selection-end-column="21" />
+            <state relative-caret-position="-507">
+              <caret line="38" column="81" selection-start-line="38" selection-start-column="81" selection-end-line="38" selection-end-column="81" />
               <folding>
                 <element signature="e#0#23#0" expanded="true" />
-                <marker date="1543297109000" expanded="true" signature="1289:1727" ph="..." />
-                <marker date="1543297109000" expanded="true" signature="6913:6917" ph="..." />
+                <marker date="1543302908000" expanded="true" signature="1397:1889" ph="..." />
+                <marker date="1543302908000" expanded="true" signature="7075:7079" ph="..." />
               </folding>
             </state>
           </provider>
         </entry>
       </file>
-      <file pinned="false" current-in-tab="false">
+      <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/dataHelper.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="1444">
-              <caret line="137" column="61" selection-start-line="137" selection-start-column="61" selection-end-line="137" selection-end-column="61" />
+            <state relative-caret-position="378">
+              <caret line="40" column="84" selection-start-line="40" selection-start-column="84" selection-end-line="40" selection-end-column="84" />
               <folding>
                 <element signature="e#0#23#0" expanded="true" />
-                <marker date="1543302454000" expanded="true" signature="1149:1328" ph="..." />
-                <marker date="1543302454000" expanded="true" signature="1325:1328" ph="..." />
+                <marker date="1543304061000" expanded="true" signature="1234:1490" ph="..." />
+                <marker date="1543304061000" expanded="true" signature="1487:1490" ph="..." />
               </folding>
             </state>
           </provider>
@@ -126,8 +124,11 @@
       <find>air_lstm_datas</find>
       <find>targets</find>
       <find>batch_size</find>
-      <find>print</find>
       <find>BAT</find>
+      <find>get</find>
+      <find>getBatchCount</find>
+      <find>print</find>
+      <find>getBa</find>
     </findStrings>
   </component>
   <component name="Git.Settings">
@@ -141,9 +142,9 @@
         <option value="$PROJECT_DIR$/myprog.log" />
         <option value="$PROJECT_DIR$/myerror.log" />
         <option value="$PROJECT_DIR$/model.py" />
-        <option value="$PROJECT_DIR$/dataHelper.py" />
         <option value="$PROJECT_DIR$/config.py" />
         <option value="$PROJECT_DIR$/main.py" />
+        <option value="$PROJECT_DIR$/dataHelper.py" />
       </list>
     </option>
   </component>
@@ -263,43 +264,43 @@
     <entry file="file://$PROJECT_DIR$/myprog.log">
       <provider selected="true" editor-type-id="text-editor" />
     </entry>
+    <entry file="file://$PROJECT_DIR$/config.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="373">
+          <caret line="35" column="15" selection-start-line="35" selection-start-column="15" selection-end-line="35" selection-end-column="15" />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/model.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1827">
-          <caret line="114" column="21" lean-forward="true" selection-start-line="114" selection-start-column="21" selection-end-line="114" selection-end-column="21" />
+        <state relative-caret-position="-507">
+          <caret line="38" column="81" selection-start-line="38" selection-start-column="81" selection-end-line="38" selection-end-column="81" />
           <folding>
             <element signature="e#0#23#0" expanded="true" />
-            <marker date="1543297109000" expanded="true" signature="1289:1727" ph="..." />
-            <marker date="1543297109000" expanded="true" signature="6913:6917" ph="..." />
+            <marker date="1543302908000" expanded="true" signature="1397:1889" ph="..." />
+            <marker date="1543302908000" expanded="true" signature="7075:7079" ph="..." />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/main.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="157">
+          <caret line="251" column="42" selection-start-line="251" selection-start-column="42" selection-end-line="251" selection-end-column="42" />
+          <folding>
+            <element signature="e#0#23#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/dataHelper.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1444">
-          <caret line="137" column="61" selection-start-line="137" selection-start-column="61" selection-end-line="137" selection-end-column="61" />
+        <state relative-caret-position="378">
+          <caret line="40" column="84" selection-start-line="40" selection-start-column="84" selection-end-line="40" selection-end-column="84" />
           <folding>
             <element signature="e#0#23#0" expanded="true" />
-            <marker date="1543302454000" expanded="true" signature="1149:1328" ph="..." />
-            <marker date="1543302454000" expanded="true" signature="1325:1328" ph="..." />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/config.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="68">
-          <caret line="4" column="15" selection-start-line="4" selection-start-column="15" selection-end-line="4" selection-end-column="15" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/main.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-771">
-          <caret line="212" column="39" selection-start-line="212" selection-start-column="39" selection-end-line="212" selection-end-column="39" />
-          <folding>
-            <element signature="e#0#23#0" expanded="true" />
+            <marker date="1543304061000" expanded="true" signature="1234:1490" ph="..." />
+            <marker date="1543304061000" expanded="true" signature="1487:1490" ph="..." />
           </folding>
         </state>
       </provider>
