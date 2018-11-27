@@ -247,7 +247,7 @@ def run_epoch(session, model, batch_count, train_op, output_log, step,
         iters += 1
         print(iters)
         print(cost)
-        # print(output)
+        print(output)
         # print(targets[batch_idx])
 
         total_costs += cost
