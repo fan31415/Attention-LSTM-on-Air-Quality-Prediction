@@ -278,9 +278,11 @@ def main():
 
     train_model = FModel(True)
 
+    saver = tf.train.Saver()
 
 
     with tf.Session() as sess:
+
         sess.run(tf.global_variables_initializer())
 
         step = 0
@@ -311,6 +313,7 @@ def main():
                                                  weather_feed, targets, station_idx)
                     print("Step: ", step)
                     print(total_cost)
+                    saver.save(sess, 'my_model.model', global_step=step)
 
 
 main()

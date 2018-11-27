@@ -148,22 +148,25 @@ def attention_layer_uni_input(station_inputs, batch_size, hidden_size):
 class LSTM_model(object):
     def __init__(self, inputs, batch_size=BATCH_SIZE, state_size=LSTM_HIDDEN_SIZE, layer_num=2, num_steps=NUM_STEPS,
                  feature_num=AIR_FEATURE_NUM):
+        self.inputs = inputs
         if USE_GPU:
-            stacked_cell = tf.contrib.cudnn_rnn.CudnnLSTM(2, state_size, kernel_initializer = UniformInitializer,
+            cell = tf.contrib.cudnn_rnn.CudnnLSTM(2, state_size, kernel_initializer = UniformInitializer,
                                                         bias_initializer = UniformInitializer)
+            self.init_state = cell.get_weights()
+            state = self.init_state
+            cell.set_weights(state)
+            outpus, state = cell(self.inputs)
         else:
             stacked_cell = tf.nn.rnn_cell.MultiRNNCell([tf.nn.rnn_cell.LSTMCell(state_size) \
-                                                    for _ in range(layer_num)])
+                                                        for _ in range(layer_num)])
 
-        self.inputs = inputs
+            self.init_state = stacked_cell.zero_state(batch_size, dtype=tf.float32)
 
-        self.init_state = stacked_cell.zero_state(batch_size, dtype=tf.float32)
+            state = self.init_state
 
-        state = self.init_state
-
-        # print(self.inputs.get_shape())
-        outputs, state = tf.nn.dynamic_rnn(stacked_cell,
-                                           self.inputs, initial_state=state, dtype=tf.float32)
+            # print(self.inputs.get_shape())
+            outputs, state = tf.nn.dynamic_rnn(stacked_cell,
+                                               self.inputs, initial_state=state, dtype=tf.float32)
 
         #         print("lstm ", outputs)
         self.final_state = state
