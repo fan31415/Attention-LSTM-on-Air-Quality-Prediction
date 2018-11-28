@@ -1,16 +1,16 @@
 Labels = ["PM2.5", "PM10", "O3"]
 
-USE_GPU = False
+USE_GPU = True
 
-LEARNING_RATE = 0.009
+LEARNING_RATE = 0.005
 
 # the epoch for all local station training
-TOTAL_EPOCH = 10
+TOTAL_EPOCH = 100
 
 # the epoch for one local station training
-NUM_EPOCH = 10
+NUM_EPOCH = 100
 
-BATCH_SIZE = 32 # The number of records within a batch
+BATCH_SIZE = 128 # The number of records within a batch
 
 NUM_STEPS = 48 # the cut off steps for one time back-prop process
 TRAINING_STEPS = 10000 # the epoch number of training
