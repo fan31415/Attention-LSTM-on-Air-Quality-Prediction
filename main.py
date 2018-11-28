@@ -3,7 +3,7 @@ import keras
 import pandas as pd
 import numpy as np
 
-from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import StandardScaler, MinMaxScaler
 import pickle
 import os
 import sys
@@ -47,27 +47,48 @@ for staion_train_data in trainDataByStation:
 # Normalize locations data
 
 for idx, locations in enumerate(air_station_locations):
-    scaler = StandardScaler()
+    scaler = pre_processor.air_location_scalar[idx]
     air_station_locations[idx] = scaler.fit_transform(locations[['dist', 'direction']])
 
 
 for idx, locations in enumerate(grid_location_by_station):
-    scaler = StandardScaler()
+    scaler = pre_processor.weather_location_scalar[idx]
     grid_location_by_station[idx] = scaler.fit_transform(locations[['dist', 'direction']])
 
 
-
 # generate air lstm data
+# air data is normalized in a uniform scale
 air_lstm_datas= [None] * AIR_STATION_NUM
 Y = [None] * AIR_STATION_NUM
+# fit normalizer
+all_air_data = None
+for i in range(AIR_STATION_NUM):
+    if all_air_data is None:
+        all_air_data = air_qualities[i]
+    else:
+        all_air_data = pd.concat([all_air_data, air_qualities[i]], axis=0)
+pre_processor.fit_transform_air_scalar(all_air_data, only_fit=True)
+# generate lstm input data
 for i in range(AIR_STATION_NUM):
     air_lstm_datas[i], Y[i] = generate_air_quality_lstm_data(air_qualities[i], BATCH_SIZE, NUM_STEPS)
 
+
 # generate weather lstm data
-weather_lstm_datas= [[None] * GRID_WEAtHER_STATION_NUM] * AIR_STATION_NUM
+weather_lstm_datas = [[None] * GRID_WEAtHER_STATION_NUM] * AIR_STATION_NUM
 for i in range(AIR_STATION_NUM):
+    all_weather_data = None
     for j in range(GRID_WEAtHER_STATION_NUM):
-        weather_lstm_datas[i][j] = generate_weather_lstm_data(grid_weathers_around_station[i][j], BATCH_SIZE, NUM_STEPS)
+        if all_weather_data is None:
+            all_weather_data = grid_weathers_around_station[i][j]
+        else:
+            all_weather_data = pd.concat([all_weather_data, grid_weathers_around_station[i][j]], axis=0)
+    all_weather_data_normal = pre_processor.fit_transform_weather_scalar(i, all_weather_data)
+    offset = 0
+    for j in range(GRID_WEAtHER_STATION_NUM):
+        weather_data_size_j = grid_weathers_around_station[i][j].shape[0]
+        normalized_input = all_weather_data_normal[offset:weather_data_size_j+offset]
+        offset += weather_data_size_j
+        weather_lstm_datas[i][j] = generate_weather_lstm_data(normalized_input, BATCH_SIZE, NUM_STEPS)
 
 
 # define BATCH_COUNT in global config here
@@ -248,8 +269,8 @@ def run_epoch(session, model, batch_count, train_op, output_log, step,
         model.global_bp_cnt += 1
         # record running metadata when firstly run a batch
         if iters == 0:
-            run_options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
-            run_metadata = tf.RunMetadata()
+            # run_options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
+            # run_metadata = tf.RunMetadata()
             cost, _, output, losses, summary = session.run([model.cost, train_op, model.results, model.losses, model.merged_summary],
                                        {model.local_air_lstm_inputs: air_qualities_feed[batch_idx][station_idx],
                                         # the input below is all list of batch data
@@ -257,13 +278,10 @@ def run_epoch(session, model, batch_count, train_op, output_log, step,
                                         model.air_lstm_inputs: air_qualities_feed[batch_idx],
                                         model.weather_fc_inputs: weather_location_feed[batch_idx],
                                         model.weather_lstm_inputs: weather_feed[batch_idx],
-                                        model.targets: targets[batch_idx]},
-                                                           options=run_options,
-                                                           run_metadata=run_metadata)
+                                        model.targets: targets[batch_idx]})
         #         cost, _ = session.run([model.cost, train_op], {model.targets: y[0][batch_idx],
         #
         #                                                model.temp_targets: train_Y})
-            model.train_writer.add_run_metadata(run_metadata, 'BigIter_%d,station_%d' % (big_iter, station_idx))
         else:
             cost, _, output, losses, summary = session.run(
                 [model.cost, train_op, model.results, model.losses, model.merged_summary],

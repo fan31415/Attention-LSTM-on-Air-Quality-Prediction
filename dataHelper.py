@@ -3,23 +3,67 @@ import keras
 import pandas as pd
 import numpy as np
 
-from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import StandardScaler, MinMaxScaler
 import pickle
 import os
 
 from config import *
+
+
+class PreProcessor:
+    def __init__(self, n_models):
+        # each model has a independent scalar
+        self.air_scalar = MinMaxScaler()
+        self.weather_scalar = []
+        self.air_location_scalar = []
+        self.weather_location_scalar = []
+        for _ in range(n_models):
+            self.weather_scalar.append(MinMaxScaler())
+            self.air_location_scalar.append(MinMaxScaler())
+            self.weather_location_scalar.append(MinMaxScaler())
+
+    def fit_transform_weather_scalar(self, station_id, all_weather_data, only_fit=False):
+        if only_fit:
+            self.weather_scalar[station_id].fit(all_weather_data)
+            return
+        return self.weather_scalar[station_id].fit_transform(all_weather_data)
+
+    def fit_transform_air_scalar(self, all_air_data, only_fit=False):
+        if only_fit:
+            self.air_scalar.fit(all_air_data)
+            return
+        return self.air_scalar.fit_transform(all_air_data)
+
+    def fit_transform_air_location_scalar(self, station_id, all_air_location):
+        return self.air_location_scalar[station_id].fit_transform(all_air_location)
+
+    def fit_transform_weather_location_scalar(self, station_id, all_weather_location):
+        return self.weather_location_scalar[station_id].fit_transform(all_weather_location)
+
+    def transform_weather(self, station_id, weather):
+        return self.weather_scalar[station_id].transform(weather)
+
+    def transform_air(self, station_id, air):
+        return self.weather_scalar[station_id].transform(air)
+
+
+pre_processor = PreProcessor(35)
+
 
 def load_data():
     up_dir = "/Users/fanyijie/Downloads/5002Data/datapack_5002/"
     up_dir = "./data/"
     files = os.listdir(up_dir)
     data = []
+    cnt = 0
     for file in files:
         path = os.path.join(up_dir, file)
         print(file)
         with open(path, "rb") as f:
             data.append(pickle.load(f))
+            cnt += 1
     return data
+
 
 # Notice this will also return actuall count
 def getBatchCount(total_count, batch_size = BATCH_SIZE):
@@ -37,6 +81,7 @@ def copy_enlarge_vector(inputs, sequence_length):
     sequence= np.tile(inputs, [sequence_length, 1])
     return sequence
 
+
 def generate_location_batch_data(inputs, batch_count, sequence_length):
 
     long_vector = copy_enlarge_vector(inputs, sequence_length)
@@ -46,9 +91,6 @@ def generate_location_batch_data(inputs, batch_count, sequence_length):
     long_vector = long_vector[: actuall_count]
     data = np.split(long_vector, batch_count)
     return data
-
-
-
 
 
 # inputs will be shape [time_count, feature_number]
@@ -75,8 +117,8 @@ def generate_air_quality_lstm_data(inputs, batch_size, num_steps):
     Y = data_Y.iloc[- take_count:]
 
     # Normalized Data
-    scaler = StandardScaler()
-    input_X = scaler.fit_transform(input_X)
+    scaler = pre_processor.air_scalar
+    input_X = scaler.transform(input_X)
 
     #     Arrange X into sequence list
     sequence_X = []
@@ -108,6 +150,7 @@ def generate_air_quality_lstm_data(inputs, batch_size, num_steps):
 
     return X_batches, Y_batches
 
+
 def generate_weather_lstm_data(inputs, batch_size, num_steps):
     columns = list(inputs)
     feature_num = len(columns)
@@ -131,11 +174,11 @@ def generate_weather_lstm_data(inputs, batch_size, num_steps):
     # The last time data will be one of our predictions, so will not include in our input_X
     # To make input X has proper shape, I start the index from n-1
 
-    input_X = inputs.iloc[- take_count - 1: - 1]
+    input_X = inputs[- take_count - 1: - 1]
 
     # Normalized Data
-    scaler = StandardScaler()
-    input_X = scaler.fit_transform(input_X)
+    # scaler = pre_processor.weather_scalar[]
+    # input_X = scaler.fit_transform(input_X)
 
     #     Arrange X into sequence list
     sequence_X = []
