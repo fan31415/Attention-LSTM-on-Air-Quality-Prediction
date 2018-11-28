@@ -11,10 +11,12 @@ from config import *
 
 def load_data():
     up_dir = "/Users/fanyijie/Downloads/5002Data/datapack_5002/"
+    up_dir = "./data/"
     files = os.listdir(up_dir)
     data = []
     for file in files:
         path = os.path.join(up_dir, file)
+        print(file)
         with open(path, "rb") as f:
             data.append(pickle.load(f))
     return data

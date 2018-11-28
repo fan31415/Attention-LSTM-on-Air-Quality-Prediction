@@ -111,7 +111,9 @@ for i in range(AIR_STATION_NUM):
 # print(air_lstm_datas[0][0])
 # exit()
 class FModel(object):
-    def __init__(self, is_training):
+    def __init__(self, is_training, sess=None):
+        self.global_bp_cnt = 0  # a counter to record the times running BackPropagation
+        self.sess = sess
         self.batch_size = BATCH_SIZE
         self.num_steps = NUM_STEPS
 
@@ -219,13 +221,19 @@ class FModel(object):
         self.cost = tf.div(tf.reduce_sum(self.losses), BATCH_SIZE)
         # self.train_op = tf.contrib.layers.optimize_loss(
         #     loss, tf.train.get_global_step(), optimizer="Adam", learning_rate=0.01)
-
+        tf.summary.scalar('train loss', self.cost)
         self.train_op = tf.train.AdamOptimizer(LEARNING_RATE).minimize(self.cost)
+        self.merged_summary = tf.summary.merge_all()
+
+        if self.sess is not None:
+            self.train_writer = tf.summary.FileWriter('./logs/train/', sess.graph)
+            self.test_writer = tf.summary.FileWriter('./logs/test')
 
 
 def run_epoch(session, model, batch_count, train_op, output_log, step,
               air_locations_feed, weather_location_feed, air_qualities_feed,
-              weather_feed, targets, station_idx):
+              weather_feed, targets, station_idx, big_iter=0):
+    # big_iter is marked as the current loop idx of the big loop
     total_costs = 0.0
     iters = 0
 
@@ -236,18 +244,38 @@ def run_epoch(session, model, batch_count, train_op, output_log, step,
         # print(np.shape(weather_location_feed))
         # print(np.shape(weather_feed))
         # print(np.shape(targets))
-
-        cost, _, output, losses = session.run([model.cost, train_op, model.results, model.losses],
+        # add global_bp_cnt
+        model.global_bp_cnt += 1
+        # record running metadata when firstly run a batch
+        if iters == 0:
+            run_options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
+            run_metadata = tf.RunMetadata()
+            cost, _, output, losses, summary = session.run([model.cost, train_op, model.results, model.losses, model.merged_summary],
                                        {model.local_air_lstm_inputs: air_qualities_feed[batch_idx][station_idx],
                                         # the input below is all list of batch data
                                         model.air_fc_inputs: air_locations_feed[batch_idx],
                                         model.air_lstm_inputs: air_qualities_feed[batch_idx],
                                         model.weather_fc_inputs: weather_location_feed[batch_idx],
                                         model.weather_lstm_inputs: weather_feed[batch_idx],
-                                        model.targets: targets[batch_idx]})
+                                        model.targets: targets[batch_idx]},
+                                                           options=run_options,
+                                                           run_metadata=run_metadata)
         #         cost, _ = session.run([model.cost, train_op], {model.targets: y[0][batch_idx],
         #
         #                                                model.temp_targets: train_Y})
+            model.train_writer.add_run_metadata(run_metadata, 'BigIter_%d,station_%d' % (big_iter, station_idx))
+        else:
+            cost, _, output, losses, summary = session.run(
+                [model.cost, train_op, model.results, model.losses, model.merged_summary],
+                {model.local_air_lstm_inputs: air_qualities_feed[batch_idx][station_idx],
+                 # the input below is all list of batch data
+                 model.air_fc_inputs: air_locations_feed[batch_idx],
+                 model.air_lstm_inputs: air_qualities_feed[batch_idx],
+                 model.weather_fc_inputs: weather_location_feed[batch_idx],
+                 model.weather_lstm_inputs: weather_feed[batch_idx],
+                 model.targets: targets[batch_idx]})
+
+        model.train_writer.add_summary(summary, model.global_bp_cnt)
         iters += 1
         print(iters)
         print(cost)
@@ -266,7 +294,7 @@ def main():
     # The only place define batch count, this should be edit accordingly by BATCH_SIZE
     # define BATCH_COUNT HERE
 
-
+    sess = tf.InteractiveSession()
 
     # [AIR_STATION_NUM (total data by station), DATA_NUM (in one total train), BATCH_COUNT, BATCH_SIZE, FEATURE_NUM)]
     # swap axes so that we can first choose data by trained local station, then get data by bacth_idx
@@ -281,7 +309,7 @@ def main():
     print(np.shape(np_weather_lstm_datas))
     print(np.shape(np_Y))
 
-    train_model = FModel(True)
+    train_model = FModel(True, sess=sess)
 
     saver = tf.train.Saver()
 
@@ -315,7 +343,7 @@ def main():
 
                     step, total_cost = run_epoch(sess, train_model, BATCH_COUNT, train_model.train_op, True, step,
                                                  air_locations_feed, weather_location_feed, air_qualities_feed,
-                                                 weather_feed, targets, station_idx)
+                                                 weather_feed, targets, station_idx, big_iter=i)
                     print("Step: ", step)
                     print(total_cost/BATCH_COUNT)
                     saver.save(sess, './my_model.model', global_step=step)
