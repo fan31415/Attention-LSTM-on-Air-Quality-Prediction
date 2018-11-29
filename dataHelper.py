@@ -1,9 +1,8 @@
 import tensorflow as tf
-import keras
 import pandas as pd
 import numpy as np
 
-from sklearn.preprocessing import StandardScaler, MinMaxScaler
+from sklearn.preprocessing import StandardScaler
 import pickle
 import os
 
@@ -13,14 +12,14 @@ from config import *
 class PreProcessor:
     def __init__(self, n_models):
         # each model has a independent scalar
-        self.air_scalar = MinMaxScaler()
+        self.air_scalar = StandardScaler()
         self.weather_scalar = []
         self.air_location_scalar = []
         self.weather_location_scalar = []
         for _ in range(n_models):
-            self.weather_scalar.append(MinMaxScaler())
-            self.air_location_scalar.append(MinMaxScaler())
-            self.weather_location_scalar.append(MinMaxScaler())
+            self.weather_scalar.append(StandardScaler())
+            self.air_location_scalar.append(StandardScaler())
+            self.weather_location_scalar.append(StandardScaler())
 
     def fit_transform_weather_scalar(self, station_id, all_weather_data, only_fit=False):
         if only_fit:

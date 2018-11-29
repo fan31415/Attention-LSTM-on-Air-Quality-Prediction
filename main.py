@@ -1,9 +1,11 @@
+# TODO: cross-validation
+# TODO: train a model for each local
+
 import tensorflow as tf
-import keras
 import pandas as pd
 import numpy as np
 
-from sklearn.preprocessing import StandardScaler, MinMaxScaler
+from sklearn.preprocessing import StandardScaler
 import pickle
 import os
 import sys
