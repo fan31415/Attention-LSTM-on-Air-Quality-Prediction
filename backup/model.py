@@ -150,41 +150,32 @@ class LSTM_model(object):
                  feature_num=AIR_FEATURE_NUM):
         self.inputs = inputs
         if USE_GPU:
-            self.cell = tf.contrib.cudnn_rnn.CudnnLSTM(layer_num, state_size)
+            cell = tf.contrib.cudnn_rnn.CudnnLSTM(2, state_size)
 
-            self.state = [None] * 2
-            self.state[0] = tf.get_variable('hidden_h', [layer_num, batch_size, state_size], initializer=UniformInitializer)
-            self.state[1] = tf.get_variable('hidden_c', [layer_num, batch_size, state_size], initializer=UniformInitializer)
+            # self.init_state = [None] * 2
+            # self.init_state[0] = tf.get_variable('hidden_h', [2, batch_size, state_size], initializer=UniformInitializer)
+            # self.init_state[1] = tf.get_variable('hidden_c', [2, batch_size, state_size], initializer=UniformInitializer)
             # self.init_state = tf.get_variable('initial_state',
             #                                   [tf.random_uniform(cell.state_shape(batch_size)[0]),
             #                                    tf.random_uniform(cell.state_shape(batch_size)[1])])
 
-            # self.init_state = (tf.contrib.rnn.LSTMStateTuple(h=self.init_state[1], c=self.init_state[0]),)
             # state = self.init_state
 
-
+            outputs, _ = cell(self.inputs)
         else:
-            self.stacked_cell = tf.nn.rnn_cell.MultiRNNCell([tf.nn.rnn_cell.LSTMCell(state_size) \
+            stacked_cell = tf.nn.rnn_cell.MultiRNNCell([tf.nn.rnn_cell.LSTMCell(state_size) \
                                                         for _ in range(layer_num)])
 
-            self.state = self.stacked_cell.zero_state(batch_size, dtype=tf.float32)
+            self.init_state = stacked_cell.zero_state(batch_size, dtype=tf.float32)
 
-            # state = self.init_state
+            state = self.init_state
 
             # print(self.inputs.get_shape())
-
+            outputs, state = tf.nn.dynamic_rnn(stacked_cell,
+                                               self.inputs, initial_state=state, dtype=tf.float32)
 
         #         print("lstm ", outputs)
-        #     self.final_state = state
-
-    def __call__(self, *args, **kwargs):
-        if USE_GPU:
-            outputs, self.state[0], self.state[1] = self.cell(self.inputs, self.state[0], self.state[1])
-
-        else:
-            outputs, self.state = tf.nn.dynamic_rnn(self.stacked_cell,
-                                               self.inputs, initial_state=self.state, dtype=tf.float32)
-        return outputs[:, -1, :]
-
+            self.final_state = state
+        self.output = outputs[:, -1, :]
 
 

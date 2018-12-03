@@ -177,7 +177,7 @@ class FModel(object):
             for i in range(AIR_STATION_NUM):
                 with tf.variable_scope("air_higle_level_fc"):
                     air_high_level_fc_inputs = tf.concat([self.air_location_fc_outputs[i],
-                                                          self.air_lstms[i]()], axis=1)
+                                                          self.air_lstms[i].output], axis=1)
                     self.air_high_level_fc_outputs.append(high_level_fc(air_high_level_fc_inputs))
 
         with tf.variable_scope("weather_high_level_fc", reuse = tf.AUTO_REUSE):
@@ -185,12 +185,12 @@ class FModel(object):
             for i in range(GRID_WEAtHER_STATION_NUM):
                 with tf.variable_scope("weather_high_level_fc"):
                     weather_high_level_fc_inputs = tf.concat([self.weather_location_fc_outputs[i],
-                                                              self.weather_lstms[i]()], axis=1)
+                                                              self.weather_lstms[i].output], axis=1)
                     self.weather_high_level_fc_outputs.append(high_level_fc(weather_high_level_fc_inputs))
 
         # Is use local lstm to feed directly without fc OK?
         with tf.variable_scope("air_attention"):
-            air_station_attention_output = attention_layer(self.air_high_level_fc_outputs, self.local_air_lstm(),
+            air_station_attention_output = attention_layer(self.air_high_level_fc_outputs, self.local_air_lstm.output,
                                                            BATCH_SIZE, HIGH_LEVEL_FC_HIDDEN_SIZE, LSTM_HIDDEN_SIZE)
         # Do we need local weather?
         # If we use local weather, we seems to find the relationship between local weather and other station weathers
@@ -206,7 +206,7 @@ class FModel(object):
 
         t_air = tf.transpose(air_station_attention_output)
         t_weather = tf.transpose(weather_station_attention_output)
-        fusion_fc_inputs = tf.concat([t_air, t_weather, self.local_air_lstm()], axis = 1)
+        fusion_fc_inputs = tf.concat([t_air, t_weather, self.local_air_lstm.output], axis = 1)
         fusion_fc_outputs =  fusion_fc_layer(fusion_fc_inputs)
 
         self.results = predict_layer(fusion_fc_outputs)
