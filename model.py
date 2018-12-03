@@ -150,6 +150,7 @@ class LSTM_model(object):
                  feature_num=AIR_FEATURE_NUM):
 
         if USE_GPU:
+            # time major for cudnn_rnn
             self.inputs = tf.transpose(inputs, [1, 0, 2])
 
             self.cell = tf.contrib.cudnn_rnn.CudnnLSTM(layer_num, state_size)
@@ -187,11 +188,13 @@ class LSTM_model(object):
     def __call__(self, *args, **kwargs):
         if USE_GPU:
             outputs, self.state = self.cell(self.inputs, initial_state=self.state)
+            outputs = tf.transpose(outputs, [1, 0, 2])
+            return outputs[:, -1, :]
 
         else:
             outputs, self.state = tf.nn.dynamic_rnn(self.stacked_cell,
                                                self.inputs, initial_state=self.state, dtype=tf.float32)
-        return outputs[:, -1, :]
+            return outputs[:, -1, :]
 
 
 
