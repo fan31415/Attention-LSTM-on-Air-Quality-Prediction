@@ -152,9 +152,11 @@ class LSTM_model(object):
         if USE_GPU:
             self.cell = tf.contrib.cudnn_rnn.CudnnLSTM(layer_num, state_size)
 
-            self.state = [None] * 2
-            self.state[0] = tf.get_variable('hidden_h', [layer_num, batch_size, state_size], initializer=UniformInitializer)
-            self.state[1] = tf.get_variable('hidden_c', [layer_num, batch_size, state_size], initializer=UniformInitializer)
+
+            h = tf.get_variable('hidden_h', [layer_num, batch_size, state_size], initializer=UniformInitializer)
+            c = tf.get_variable('hidden_c', [layer_num, batch_size, state_size], initializer=UniformInitializer)
+            self.state = (tf.contrib.rnn.LSTMStateTuple(h=h, c=c),)
+
             # self.init_state = tf.get_variable('initial_state',
             #                                   [tf.random_uniform(cell.state_shape(batch_size)[0]),
             #                                    tf.random_uniform(cell.state_shape(batch_size)[1])])
@@ -179,7 +181,7 @@ class LSTM_model(object):
 
     def __call__(self, *args, **kwargs):
         if USE_GPU:
-            outputs, self.state[0], self.state[1] = self.cell(self.inputs, self.state[0], self.state[1])
+            outputs, self.state = self.cell(self.inputs, initial_state=self.state)
 
         else:
             outputs, self.state = tf.nn.dynamic_rnn(self.stacked_cell,
