@@ -150,7 +150,7 @@ class LSTM_model(object):
                  feature_num=AIR_FEATURE_NUM):
 
         if USE_GPU:
-            self.inputs = tf.swapaxes(inputs, 0, 1)
+            self.inputs = tf.transpose(inputs, [1, 0, 2])
 
             self.cell = tf.contrib.cudnn_rnn.CudnnLSTM(layer_num, state_size)
 
