@@ -148,14 +148,18 @@ def attention_layer_uni_input(station_inputs, batch_size, hidden_size):
 class LSTM_model(object):
     def __init__(self, inputs, batch_size=BATCH_SIZE, state_size=LSTM_HIDDEN_SIZE, layer_num=2, num_steps=NUM_STEPS,
                  feature_num=AIR_FEATURE_NUM):
-        self.inputs = inputs
+
         if USE_GPU:
+            self.inputs = tf.swapaxes(inputs, 0, 1)
+
             self.cell = tf.contrib.cudnn_rnn.CudnnLSTM(layer_num, state_size)
 
 
             h = tf.get_variable('hidden_h', [layer_num, batch_size, state_size], initializer=UniformInitializer)
             c = tf.get_variable('hidden_c', [layer_num, batch_size, state_size], initializer=UniformInitializer)
-            self.state = (tf.contrib.rnn.LSTMStateTuple(h=h, c=c),)
+
+            # self.state = self.cell.zero_state(batch_size, dtype=tf.float32)
+            self.state = tf.contrib.rnn.LSTMStateTuple(h=h, c=c)
 
             # self.init_state = tf.get_variable('initial_state',
             #                                   [tf.random_uniform(cell.state_shape(batch_size)[0]),
@@ -166,6 +170,7 @@ class LSTM_model(object):
 
 
         else:
+            self.inputs = inputs
             self.stacked_cell = tf.nn.rnn_cell.MultiRNNCell([tf.nn.rnn_cell.LSTMCell(state_size) \
                                                         for _ in range(layer_num)])
 
