@@ -246,10 +246,10 @@ class FModel(object):
         self.air_lstms_states = []
 
 
-        with tf.variable_scope("loccal_air_lstm", reuse=tf.AUTO_REUSE) as scope:
+        with tf.variable_scope("loccal_air_lstm") as scope:
             self.local_air_lstm = LSTM_model(self.local_air_lstm_inputs)
 
-        with tf.variable_scope("local_weather_lstm", reuse=tf.AUTO_REUSE):
+        with tf.variable_scope("local_weather_lstm"):
             self.local_weather_lstm = LSTM_model(self.local_weather_lstm_inputs)
 
 
@@ -312,7 +312,7 @@ class FModel(object):
                 self.attention_chosen_outputs.append(attention_chosen_layer(self.attention_chosen_inputs[i]))
 
         # Is use local lstm to feed directly without fc OK?
-        with tf.variable_scope("air_attention", reuse = tf.AUTO_REUSE):
+        with tf.variable_scope("air_attention"):
 
 
             air_station_attention_output = attention_layer(self.high_level_fc_outputs, self.attention_chosen_outputs,
@@ -331,6 +331,8 @@ class FModel(object):
 
         t_air = tf.transpose(air_station_attention_output)
         # t_weather = tf.transpose(weather_station_attention_output)
+
+
         fusion_fc_inputs = tf.concat([t_air, self.local_weather_lstm.output, self.local_air_lstm.output], axis = 1)
         fusion_fc_outputs =  fusion_fc_layer(fusion_fc_inputs)
 
@@ -439,6 +441,8 @@ def main():
 
 
         with tf.Session() as sess:
+
+            tf.reset_default_graph()
 
             saver = tf.train.Saver()
 
