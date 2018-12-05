@@ -35,3 +35,6 @@ Before running main.py, you should run preprocess.py in preprocess firstly. Plea
 # Notice
 Detailed code explanation please refer to the code comments. 
 
+# Github Repo
+https://github.com/fan31415/Attention-LSTM-on-Air-Quality-Prediction
+
