@@ -20,13 +20,13 @@ from config import *
 
 trainDataByStation, station_files = load_data()
 
-testDataByStation, files = load_data(dir = TEST_DATA_DIR)
-testDataDict = {}
+genDataByStation, files = load_data(dir = GEN_DATA_DIR)
+genDataDict = {}
 
 for idx, file in enumerate(files):
     name = file.split('.')[0].split('_')[2:4]
     name = "_".join(name)
-    testDataDict[name] = testDataByStation[idx]
+    genDataDict[name] = genDataByStation[idx]
 
 pd.options.mode.chained_assignment = None
 
@@ -629,7 +629,7 @@ def predict():
         future_global_air = []
 
         for index in indexes[model_idx]:
-            future_global_air.append(testDataDict[index])
+            future_global_air.append(genDataDict[index])
 
 
         with tf.Session() as sess:

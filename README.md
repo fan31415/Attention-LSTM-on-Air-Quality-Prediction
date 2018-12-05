@@ -15,6 +15,14 @@
 * pandas  0.23.4
 * numpy  1.15.1
 
+# Preprocess & Feature Enginnering
+The codes of data pre-process and feature enginnering are in preprocess floder.
+The result of feature engineering is also in Project5002.ipynb. Please move it to the floder containing original csv data files.
+
+Before running main.py, you should run preprocess.py in preprocess firstly. Please copy original csv data files to the current floder (same as where the main.py is).
+
+
+
 
 # Run Steps
 1. Edit the `DATA_DIR` and `GEN_DATA_DIR` in `config.py`. 
@@ -26,3 +34,4 @@
 
 # Notice
 Detailed code explanation please refer to the code comments. 
+

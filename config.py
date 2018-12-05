@@ -3,7 +3,7 @@ Labels = ["PM2.5", "PM10", "O3"]
 DATA_DIR = "./data/"
 
 USE_GPU = True
-TEST_DATA_DIR = "./test_data"
+GEN_DATA_DIR = "./gen_data"
 
 LEARNING_RATE = 0.001
 
@@ -13,7 +13,7 @@ EARLY_STOP = 400
 TOTAL_EPOCH = 1
 
 # the epoch on first dataset (2017)
-FIRST_EPOCH = 0
+FIRST_EPOCH = 50
 
 # the epoch on second dataset (2018)
 SECOND_EPOCH = 400
