@@ -735,7 +735,12 @@ def main():
 
 
 def predict():
-    for model_idx in [0]:
+    err_model = []
+    model_not_found = []
+    os.mkdir("./result/")
+
+    for model_idx in range(AIR_STATION_NUM):
+        tf.reset_default_graph()
         dataset = datasets[1]
         global_station_number = len(datasets[1].global_air[model_idx])
         eval_model = FModel(global_station_number, False)
@@ -815,9 +820,31 @@ def predict():
         # print(test_global_weather[0])
         # print(test_global_location[0])
         # print(test_global_air[0])
-
         with tf.Session() as sess:
-            saver.restore(sess, "my_model-0-acc-0.5583217740058899-40")
+            def choose_model(model_idx):
+                acc_filename_dict = {}
+                for filename in os.listdir("./"):
+                    if ".meta" in filename and str(model_idx) in filename:
+                        info = filename.split("-")
+                        file_model_idx = int(info[1])
+                        if model_idx != file_model_idx:
+                            continue
+                        acc = float(info[3])
+                        acc_filename_dict[filename] = acc
+                if len(acc_filename_dict) == 0:
+                    return None, None
+                acc_rank = sorted(acc_filename_dict.items(), key=lambda k: k[1])
+                return acc_rank[0][0].split(".met")[0], acc_rank[0][1]
+            model_name, acc = choose_model(model_idx)
+            if model_name is None:
+                model_not_found.append(model_idx)
+                continue
+            if acc > 0.8:
+                err_model.append(model_idx)
+                continue
+            # saver.restore(sess, "my_model-0-acc-0.5583217740058899-40")
+            saver.restore(sess, model_name)
+
             batch_idx = BATCH_COUNT-1
             # sess.run(eval_model.results)
             result_pd = pd.DataFrame(columns=["PM2.5", "PM10", "O3"])
@@ -859,9 +886,10 @@ def predict():
 
                 result_pd.loc[result_pd.shape[0], :] = result
                 print(result)
-            result_pd.to_csv("station_" + station_files[model_idx] + ".csv")
+            result_pd.to_csv("./result/station_" + station_files[model_idx] + ".csv")
             # print(output)
-
+    print("error model:", err_model)
+    print("model not found:", model_not_found)
 
 # main()
 predict()
