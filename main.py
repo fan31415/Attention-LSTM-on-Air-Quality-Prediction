@@ -236,12 +236,13 @@ for idx, dataset in enumerate(datasets):
 # print(air_lstm_datas[0][0])
 # exit()
 class FModel(object):
-    def __init__(self, global_station_num, is_training, sess=None):
+    def __init__(self, global_station_num, is_training, sess=None, model_id=-1):
         self.global_bp_cnt = 0  # a counter to record the times running BackPropagation
         self.sess = sess
         self.global_station_num = global_station_num
         self.batch_size = BATCH_SIZE
         self.num_steps = NUM_STEPS
+        self.model_id = model_id
 
         # there seems can use tf.int32?
         self.targets = tf.placeholder(tf.float32, [BATCH_SIZE, len(Labels)])
@@ -465,7 +466,6 @@ def main():
     for model_idx in range(AIR_STATION_NUM):
 
 
-
         # for datasets 0
         # initial step
 
@@ -474,7 +474,7 @@ def main():
         global_station_number = len(datasets[0].global_air[model_idx])
         sess = tf.InteractiveSession()
 
-        train_model = FModel(global_station_number, True, sess=sess)
+        train_model = FModel(global_station_number, True, sess=sess, model_id=model_idx)
 
 
 
