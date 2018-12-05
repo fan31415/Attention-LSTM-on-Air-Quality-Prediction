@@ -26,6 +26,12 @@ from config import *
 
 
 trainDataByStation = load_data()
+#
+# print(trainDataByStation[0][0])
+# print(trainDataByStation[0][1])
+# print(trainDataByStation[0][2])
+# print(trainDataByStation[0][3].iloc[0])
+
 
 print(len(trainDataByStation))
 
