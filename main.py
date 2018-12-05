@@ -1,9 +1,7 @@
 import tensorflow as tf
-import keras
 import pandas as pd
 import numpy as np
-
-from sklearn.preprocessing import StandardScaler
+from dataHelper import PreProcessor
 import pickle
 import os
 import sys
@@ -60,9 +58,8 @@ class Dataset:
     global_locations_datas = None
     Y = None
 
+
 dataset = Dataset()
-
-
 
 datasets = []
 
@@ -136,6 +133,40 @@ for i in range(AIR_STATION_NUM):
 
 datasets.append(deepcopy(dataset))
 
+preprocessor_list = []
+for model_idx in range(len(trainDataByStation)):
+    print("normalization: Model %d" % model_idx)
+    num_neighbor = len(datasets[0].global_air[model_idx])
+    preprocessor = PreProcessor()
+    # normalize data
+    local_air_pack = pd.concat([datasets[0].local_air[model_idx], datasets[1].local_air[model_idx]], axis=0)
+    local_weather_pack = pd.concat([datasets[0].local_weather[model_idx], datasets[1].local_weather[model_idx]], axis=0)
+    preprocessor.local_air_scalar.fit(local_air_pack)
+    preprocessor.local_weather_scalar.fit(local_weather_pack)
+    del local_air_pack
+    del local_weather_pack
+    neighbor_air_pack = pd.concat([datasets[0].global_air[model_idx].iloc[0], datasets[1].global_air[model_idx].iloc[0]], axis=0)
+    for neigh_idx in range(1, num_neighbor):
+        neighbor_air_pack = pd.concat(
+            [neighbor_air_pack, datasets[0].global_air[model_idx].iloc[neigh_idx], datasets[1].global_air[model_idx].iloc[neigh_idx]], axis=0)
+    preprocessor.neighbor_air_scalar.fit(neighbor_air_pack)
+    del neighbor_air_pack
+
+    neighbor_weather_pack = pd.concat([datasets[0].global_weather[model_idx].iloc[0], datasets[1].global_weather[model_idx].iloc[0]], axis=0)
+    for neigh_idx in range(1, num_neighbor):
+        neighbor_weather_pack = pd.concat(
+            [neighbor_weather_pack, datasets[0].global_weather[model_idx].iloc[neigh_idx], datasets[1].global_weather[model_idx].iloc[neigh_idx]], axis=0)
+    preprocessor.neighbor_weather_scalar.fit(neighbor_weather_pack)
+    del neighbor_weather_pack
+
+    neighbor_location_pack = pd.concat([datasets[0].global_locations[model_idx].iloc[0], datasets[1].global_locations[model_idx].iloc[0]], axis=0)
+    for neigh_idx in range(1, num_neighbor):
+        neighbor_location_pack = pd.concat(
+            [neighbor_location_pack, datasets[0].global_locations[model_idx].iloc[neigh_idx], datasets[1].global_locations[model_idx].iloc[neigh_idx]], axis=0)
+    preprocessor.neighbor_location_scalar.fit(neighbor_location_pack)
+    del neighbor_location_pack
+    preprocessor_list.append(preprocessor)
+
 #
 # print(len(datasets[0].global_locations[0]))
 #
@@ -158,11 +189,11 @@ for idx, dataset in enumerate(datasets):
     datasets[idx].Y = [None] * AIR_STATION_NUM
     for i in range(AIR_STATION_NUM):
         # For one whole training, we only pick one data
-        datasets[idx].local_air_lstm_datas[i], datasets[idx].Y[i] = generate_lstm_data(dataset.local_air[i], hasLabel=True)
+        datasets[idx].local_air_lstm_datas[i], datasets[idx].Y[i] = generate_lstm_data(dataset.local_air[i], hasLabel=True, data_scalar=preprocessor_list[i].local_air_scalar)
 
     datasets[idx].local_weather_lstm_datas = [None] * AIR_STATION_NUM
     for i in range(AIR_STATION_NUM):
-        datasets[idx].local_weather_lstm_datas[i] = generate_lstm_data(dataset.local_weather[i], stop_before=0)
+        datasets[idx].local_weather_lstm_datas[i] = generate_lstm_data(dataset.local_weather[i], stop_before=0, data_scalar=preprocessor_list[i].local_weather_scalar)
 
 
     datasets[idx].global_air_lstm_datas = [None] * AIR_STATION_NUM
@@ -170,21 +201,21 @@ for idx, dataset in enumerate(datasets):
         datasets[idx].global_air_lstm_datas[i] = []
         num = len(dataset.global_air[i])
         for j in range(num):
-            datasets[idx].global_air_lstm_datas[i].append(generate_lstm_data(dataset.global_air[i][j]))
+            datasets[idx].global_air_lstm_datas[i].append(generate_lstm_data(dataset.global_air[i][j], data_scalar=preprocessor_list[i].neighbor_air_scalar))
 
     datasets[idx].global_weather_lstm_datas = [None] * AIR_STATION_NUM
     for i in range(AIR_STATION_NUM):
         datasets[idx].global_weather_lstm_datas[i]= []
         num = len(dataset.global_weather[i])
         for j in range(num):
-            datasets[idx].global_weather_lstm_datas[i].append(generate_lstm_data(dataset.global_weather[i][j], stop_before=0))
+            datasets[idx].global_weather_lstm_datas[i].append(generate_lstm_data(dataset.global_weather[i][j], stop_before=0, data_scalar=preprocessor_list[i].neighbor_weather_scalar))
 
     datasets[idx].global_locations_datas = [None] * AIR_STATION_NUM
     for i in range(AIR_STATION_NUM):
         datasets[idx].global_locations_datas[i] = []
         num = len(dataset.global_weather[i])
         for j in range(num):
-            datasets[idx].global_locations_datas[i].append(generate_locations_data(dataset.global_locations[i][j]))
+            datasets[idx].global_locations_datas[i].append(generate_locations_data(dataset.global_locations[i][j], data_scalar=preprocessor_list[i].neighbor_location_scalar))
 
 # dataset_idx : [current local station number, global air station num around current local station, batch count]
 # print(datasets[0].global_air_lstm_datas[0][0][0])
@@ -192,15 +223,6 @@ for idx, dataset in enumerate(datasets):
 # print("test")
 #
 # print(datasets[0].global_air_lstm_datas[0][0][1])
-
-
-
-
-
-
-
-
-
 
 # print(np.shape(weather_locations_shared_fc_feed))
 

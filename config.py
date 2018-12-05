@@ -1,18 +1,19 @@
 Labels = ["PM2.5", "PM10", "O3"]
 
-DATA_DIR = "/Users/fanyijie/Downloads/5002Data/datapack_5002/"
+DATA_DIR = "./data/"
 
 USE_GPU = False
 
 LEARNING_RATE = 0.005
 
 # the epoch for all local station training
-TOTAL_EPOCH = 10
+TOTAL_EPOCH = 1
 
-# the epoch for one local station training
-FIRST_EPOCH = 1
+# the epoch on first dataset (2017)
+FIRST_EPOCH = 100
 
-SECOND_EPOCH = 1
+# the epoch on second dataset (2018)
+SECOND_EPOCH = 200
 
 BATCH_SIZE = 48 # The number of records within a batch
 
@@ -32,10 +33,12 @@ ATTENTION_CHOSEN_HIDDEN_SIZE = 32
 # WEATHER_STATION_NUM = 18
 AIR_STATION_NUM = 35
 
-LOCAL_FC_HIDDEN_SIZE = 100
-HIGH_LEVEL_FC_HIDDEN_SIZE = 200
+LOCAL_FC_HIDDEN_SIZE = 64
 
-FUSION_LAYER_HIDDEN_SIZE = 100
+# the first layer hidden size
+HIGH_LEVEL_FC_HIDDEN_SIZE = 256
+
+FUSION_LAYER_HIDDEN_SIZE = 1536
 
 GRID_WEAtHER_STATION_NUM = 30
 
@@ -46,7 +49,7 @@ ATTENTION_JUDGE_FEATURE_NUM = 6
 
 # LOCATION_FEATURE_NUM = 2
 
-ATTENTION_HIDDEN_SIZE = 100
+ATTENTION_HIDDEN_SIZE = 128
 
 
 

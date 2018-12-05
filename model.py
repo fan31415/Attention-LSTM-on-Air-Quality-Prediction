@@ -1,5 +1,4 @@
 import tensorflow as tf
-import keras
 import pandas as pd
 import numpy as np
 
@@ -17,9 +16,9 @@ def location_FC(inputs, hidden_size = LOCAL_FC_HIDDEN_SIZE):
 
 
 # Maybe we can share parameters between local and shared?
-def high_level_fc(inputs, hidden_size = HIGH_LEVEL_FC_HIDDEN_SIZE):
+def high_level_fc(inputs, hidden_size=HIGH_LEVEL_FC_HIDDEN_SIZE, internal_hidden_size=HIGH_LEVEL_FC_HIDDEN_SIZE*4):
     with tf.variable_scope('high_level_fc'):
-        layer1 = tf.contrib.layers.fully_connected(inputs, hidden_size)
+        layer1 = tf.contrib.layers.fully_connected(inputs, internal_hidden_size)
         outputs = tf.contrib.layers.fully_connected(layer1, hidden_size)
     return outputs
 

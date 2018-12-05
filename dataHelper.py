@@ -1,5 +1,4 @@
 import tensorflow as tf
-import keras
 import pandas as pd
 import numpy as np
 
@@ -9,15 +8,19 @@ import os
 
 from config import *
 
+
 def load_data():
     up_dir = DATA_DIR
     files = os.listdir(up_dir)
     data = []
     for file in files:
+        if "pkl" not in file:
+            continue
         path = os.path.join(up_dir, file)
         with open(path, "rb") as f:
             data.append(pickle.load(f))
     return data
+
 
 # Notice this will also return actuall count
 def getBatchCount(total_count, batch_size = BATCH_SIZE):
@@ -31,12 +34,13 @@ def getBatchCount(total_count, batch_size = BATCH_SIZE):
 # To make fc output has the same length as lstm output, we need to enlarge the input
 # input should be a vector eg. (dis, dir)
 
+
 def copy_enlarge_vector(inputs, sequence_length):
     sequence= np.tile(inputs, [sequence_length, 1])
     return sequence
 
-def generate_location_batch_data(inputs, batch_count, sequence_length):
 
+def generate_location_batch_data(inputs, batch_count, sequence_length):
     long_vector = copy_enlarge_vector(inputs, sequence_length)
     # Notice that batch count should consider lstm feed data's num_steps's integrity
     # batch_count, actuall_count = getBatchCount(sequence_length)
@@ -50,7 +54,7 @@ def generate_location_batch_data(inputs, batch_count, sequence_length):
 
 
 # inputs will be shape [time_count, feature_number]
-def generate_lstm_data(inputs, batch_size = BATCH_SIZE, num_steps = NUM_STEPS, hasLabel = False, stop_before = 0):
+def generate_lstm_data(inputs, batch_size = BATCH_SIZE, num_steps = NUM_STEPS, hasLabel = False, stop_before = 0, data_scalar=StandardScaler()):
     # params:
     # stop_before: stop sequence before stop_before days before sequence end
     columns = list(inputs)
@@ -84,9 +88,10 @@ def generate_lstm_data(inputs, batch_size = BATCH_SIZE, num_steps = NUM_STEPS, h
     # Y start will be one hour later than X to be our label
         Y = data_Y.iloc[- take_count:]
 
-    # Normalized Data
-    scaler = StandardScaler()
-    input_X = scaler.fit_transform(input_X)
+    # # Normalized Data
+    # scaler = StandardScaler()
+    # input_X = scaler.fit_transform(input_X)
+    input_X = data_scalar.transform(input_X)
 
     #     Arrange X into sequence list
     sequence_X = []
@@ -174,7 +179,7 @@ def generate_weather_lstm_data(inputs, batch_size = BATCH_SIZE, num_steps = NUM_
     return X_batches
 
 
-def generate_locations_data(inputs, batch_size = BATCH_SIZE, num_steps = NUM_STEPS):
+def generate_locations_data(inputs, batch_size = BATCH_SIZE, num_steps = NUM_STEPS, data_scalar=StandardScaler()):
     columns = list(inputs)
     feature_num = len(columns)
 
@@ -196,9 +201,10 @@ def generate_locations_data(inputs, batch_size = BATCH_SIZE, num_steps = NUM_STE
 
     input_X = inputs.iloc[- take_count - 1: - 1]
 
-    # Normalized Data
-    scaler = StandardScaler()
-    input_X = scaler.fit_transform(input_X)
+    # # Normalized Data
+    # scaler = StandardScaler()
+    # input_X = scaler.fit_transform(input_X)
+    input_X = data_scalar.transform(input_X)
 
     #     Arrange X into sequence list
     sequence_X = []
@@ -222,6 +228,15 @@ def generate_locations_data(inputs, batch_size = BATCH_SIZE, num_steps = NUM_STE
     return X_batches
 
 
+# pre-processor for single model
+class PreProcessor:
+    def __init__(self):
+        # each model has a independent scalar
+        self.local_air_scalar = StandardScaler()
+        self.local_weather_scalar = StandardScaler()
+        self.neighbor_air_scalar = StandardScaler()
+        self.neighbor_weather_scalar = StandardScaler()
+        self.neighbor_location_scalar = StandardScaler()
 
 
 
