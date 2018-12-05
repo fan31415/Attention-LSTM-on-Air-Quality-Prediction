@@ -220,8 +220,8 @@ train_length = len(example_data)-1
 # print(air_lstm_datas[0][0])
 # exit()
 class FModel(object):
-    def __init__(self, is_training):
-        self.global_station_num = -1
+    def __init__(self, global_station_num, is_training):
+        self.global_station_num = global_station_num
         self.batch_size = BATCH_SIZE
         self.num_steps = NUM_STEPS
 
@@ -239,11 +239,11 @@ class FModel(object):
 
         self.local_weather_lstm_inputs = tf.placeholder(tf.float32, [BATCH_SIZE, NUM_STEPS, LOCAL_WEATHER_FEATURE_NUM])
 
-        self.attention_chosen_inputs = tf.placeholder(tf.float32, [AIR_STATION_NUM, BATCH_SIZE, ATTENTION_JUDGE_FEATURE_NUM])
+        self.attention_chosen_inputs = tf.placeholder(tf.float32, [self.global_station_num, BATCH_SIZE, ATTENTION_JUDGE_FEATURE_NUM])
 
-        self.air_lstm_inputs = tf.placeholder(tf.float32, [AIR_STATION_NUM, BATCH_SIZE, NUM_STEPS, AIR_FEATURE_NUM])
+        self.air_lstm_inputs = tf.placeholder(tf.float32, [self.global_station_num, BATCH_SIZE, NUM_STEPS, AIR_FEATURE_NUM])
 
-        self.weather_lstm_inputs = tf.placeholder(tf.float32, [AIR_STATION_NUM, BATCH_SIZE, NUM_STEPS, WEATHER_FEATURE_NUM])
+        self.weather_lstm_inputs = tf.placeholder(tf.float32, [self.global_station_num, BATCH_SIZE, NUM_STEPS, WEATHER_FEATURE_NUM])
 
         self.air_lstms = []
         self.weather_lstms = []
@@ -266,21 +266,24 @@ class FModel(object):
 
             for i in range(self.global_station_num):
                 model = LSTM_model(self.air_lstm_inputs[i])
-                if self.weather_lstms_states == []:
-                    print("error")
-                    exit()
-                model.set_state(self.air_lstms_states[i])
+                # if self.air_lstms_states != []:
+                #     print(len(self.air_lstms_states))
+                #     model.set_state(self.air_lstms_states[i])
                 self.air_lstms.append(model)
-                self.air_lstms_states.append(model.state)
+                # self.air_lstms_states.append(self.air_lstms[i].state)
         # share parametes between them
         with tf.variable_scope("weather_lstm", reuse=tf.AUTO_REUSE):
 
 
             for i in range(self.global_station_num):
                 model = LSTM_model(self.weather_lstm_inputs[i])
-                model.set_state(self.weather_lstms_states[i])
+                # if self.weather_lstms_states != []:
+                #     model.set_state(self.weather_lstms_states[i])
                 self.weather_lstms.append(model)
-                self.weather_lstms_states.append(model.state)
+                # self.weather_lstms_states.append(self.weather_lstms[i].state)
+
+
+
         # share parametes between them
         # with tf.variable_scope("location_fc", reuse=tf.AUTO_REUSE):
         #     # with tf.variable_scope("local"):
@@ -301,8 +304,11 @@ class FModel(object):
             self.high_level_fc_outputs = []
             for i in range(self.global_station_num):
                 with tf.variable_scope("higle_level_fc"):
-                    air_high_level_fc_inputs = tf.concat([self.weather_lstms[i](),
-                                                          self.air_lstms[i]()], axis=1)
+                    print(self.weather_lstms[i].output.get_shape())
+                    print(self.air_lstms[i].output.get_shape())
+                    print("test")
+                    air_high_level_fc_inputs = tf.concat([self.weather_lstms[i].output,
+                                                          self.air_lstms[i].output], axis=1)
                     self.high_level_fc_outputs.append(high_level_fc(air_high_level_fc_inputs))
 
 
@@ -313,7 +319,9 @@ class FModel(object):
 
         # Is use local lstm to feed directly without fc OK?
         with tf.variable_scope("air_attention"):
-            air_station_attention_output = attention_layer(self.high_level_fc_outputs, np.array(self.attention_chosen_outputs),
+
+
+            air_station_attention_output = attention_layer(self.high_level_fc_outputs, self.attention_chosen_outputs,
                                                            BATCH_SIZE, HIGH_LEVEL_FC_HIDDEN_SIZE, ATTENTION_CHOSEN_HIDDEN_SIZE)
         # Do we need local weather?
         # If we use local weather, we seems to find the relationship between local weather and other station weathers
@@ -329,7 +337,7 @@ class FModel(object):
 
         t_air = tf.transpose(air_station_attention_output)
         # t_weather = tf.transpose(weather_station_attention_output)
-        fusion_fc_inputs = tf.concat([t_air, self.local_weather_lstm(), self.local_air_lstm()], axis = 1)
+        fusion_fc_inputs = tf.concat([t_air, self.local_weather_lstm.output, self.local_air_lstm.output], axis = 1)
         fusion_fc_outputs =  fusion_fc_layer(fusion_fc_inputs)
 
         self.results = predict_layer(fusion_fc_outputs)
@@ -362,26 +370,40 @@ def run_epoch(session, model, batch_count, train_op, output_log, step,
 
     for batch_idx in range(batch_count):
 
-        # print(np.shape(air_locations_feed))
-        # print(np.shape(air_qualities_feed))
-        # print(np.shape(weather_location_feed))
-        # print(np.shape(weather_feed))
+        print("In batch " + str(batch_idx))
+        # print(np.shape(np_local_air))
+        # print(np.shape(np_local_weather))
+        # print(np.shape(np_global_air))
+        # print(np.shape(np_global_weather))
+        # print(np.shape(np_global_location))
         # print(np.shape(targets))
 
-        cost, _, output, losses, local_weather_state, local_air_state, weather_states, air_states = session.run([model.cost, train_op, model.results, model.losses,
-                                               model.local_weather_lstm.state, model.local_air_lstm.state,
-                                                                      model.weather_lstms_states, model.air_lstms_states],
-                                       {model.local_air_lstm_inputs: np_local_air[batch_idx],
-                                        # the input below is all list of batch data
-                                        model.local_weather_lstm_inputs: np_local_weather[batch_idx],
-                                        model.air_lstm_inputs: np_global_air[batch_idx],
-                                        model.weather_lstm_inputs: np_global_weather[batch_idx],
-                                        model.attention_chosen_inputs: np_global_location[batch_idx],
-                                        model.targets: targets[batch_idx],
-                                        model.local_weather_lstm.initial_state: local_weather_state,
-                                        model.local_air_lstm.initial_state: local_air_state,
-                                        model.weather_lstms_states: weather_states,
-                                        model.air_lstms_states: air_states})
+        #
+        # cost, _, output, losses, local_weather_state, local_air_state, weather_states, air_states = session.run([model.cost, train_op, model.results, model.losses,
+        #                                        model.local_weather_lstm.state, model.local_air_lstm.state,
+        #                                                               model.weather_lstms_states, model.air_lstms_states],
+        #                                {model.local_air_lstm_inputs: np_local_air[batch_idx],
+        #                                 # the input below is all list of batch data
+        #                                 model.local_weather_lstm_inputs: np_local_weather[batch_idx],
+        #                                 model.air_lstm_inputs: np_global_air[batch_idx],
+        #                                 model.weather_lstm_inputs: np_global_weather[batch_idx],
+        #                                 model.attention_chosen_inputs: np_global_location[batch_idx],
+        #                                 model.targets: targets[batch_idx],
+        #                                 model.local_weather_lstm.initial_state: local_weather_state,
+        #                                 model.local_air_lstm.initial_state: local_air_state,
+        #                                 model.weather_lstms_states: weather_states,
+        #                                 model.air_lstms_states: air_states})
+
+        cost, _, output, losses = session.run(
+            [model.cost, train_op, model.results, model.losses],
+            {model.local_air_lstm_inputs: np_local_air[batch_idx],
+             # the input below is all list of batch data
+             model.local_weather_lstm_inputs: np_local_weather[batch_idx],
+             model.air_lstm_inputs: np_global_air[batch_idx],
+             model.weather_lstm_inputs: np_global_weather[batch_idx],
+             model.attention_chosen_inputs: np_global_location[batch_idx],
+             model.targets: targets[batch_idx],
+             })
         #         cost, _ = session.run([model.cost, train_op], {model.targets: y[0][batch_idx],
         #
         #                                                model.temp_targets: train_Y})
@@ -416,6 +438,7 @@ def main():
         np_global_weather = np.swapaxes(np.array(datasets[0].global_weather_lstm_datas[model_idx]), 0, 1)
         np_global_location = np.swapaxes(np.array(datasets[0].global_locations_datas[model_idx]), 0, 1)
         np_Y = np.array(datasets[0].Y[model_idx])
+
         print(np.shape(np_local_air))
         print(np.shape(np_local_weather))
         print(np.shape(np_global_air))
@@ -424,15 +447,19 @@ def main():
         print(np.shape(np_Y))
 
 
-        train_model = FModel(True)
 
-        saver = tf.train.Saver()
+        # saver = tf.train.Saver()
 
 
         with tf.Session() as sess:
 
             # for datasets 1
-            train_model.global_station_num = len(datasets[0].global_air[0])
+            # initial step
+            global_station_number = len(datasets[0].global_air[0])
+            train_model = FModel(global_station_number, True)
+
+
+
 
             sess.run(tf.global_variables_initializer())
 
@@ -440,6 +467,8 @@ def main():
 
             for epoch_idx in range(TOTAL_EPOCH):
                 print("total epoch :", epoch_idx)
+
+                train_model.global_station_num = len(datasets[0].global_air[0])
                 # For every station, run NUM_EPOCH baches
                 for station_idx in range(AIR_STATION_NUM):
                     # data are all in batches, the first dimension is batch size
@@ -452,7 +481,7 @@ def main():
                                                      np_global_location, np_Y)
                         print("Step: ", step)
                         print(total_cost / BATCH_COUNT)
-                        saver.save(sess, './my_model.model', global_step=step)
+                        # saver.save(sess, './my_model.model', global_step=step)
 
 
 main()
