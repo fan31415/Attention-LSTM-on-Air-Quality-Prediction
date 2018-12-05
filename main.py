@@ -531,6 +531,14 @@ def main():
 
 
 def predict():
+    with tf.Session() as sess:
+        saver = tf.train.Saver()
+        model_idx = 0
+        global_station_number = len(datasets[0].global_air[model_idx])
+        eval_model = FModel(global_station_number, False)
+        saver.restore("my_model-0.model-2.data-00000-of-00001")
+        sess.run()
+
     pass
 
 

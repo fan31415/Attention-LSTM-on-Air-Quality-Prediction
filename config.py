@@ -10,9 +10,9 @@ LEARNING_RATE = 0.005
 TOTAL_EPOCH = 10
 
 # the epoch for one local station training
-FIRST_EPOCH = 50
+FIRST_EPOCH = 1
 
-SECOND_EPOCH = 80
+SECOND_EPOCH = 1
 
 BATCH_SIZE = 48 # The number of records within a batch
 

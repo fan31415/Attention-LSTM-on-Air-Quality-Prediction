@@ -10,7 +10,7 @@ __pycache__/
 *.ipynb
 # C extensions
 *.so
-
+my_model*
 # Distribution / packaging
 .idea/
 datapack_5002/
