@@ -1,5 +1,7 @@
 Labels = ["PM2.5", "PM10", "O3"]
 
+DATA_DIR = "/Users/fanyijie/Downloads/5002Data/datapack_5002/"
+
 USE_GPU = False
 
 LEARNING_RATE = 0.005
@@ -8,11 +10,11 @@ LEARNING_RATE = 0.005
 TOTAL_EPOCH = 10
 
 # the epoch for one local station training
-NUM_EPOCH = 50
+FIRST_EPOCH = 50
 
 SECOND_EPOCH = 80
 
-BATCH_SIZE = 64 # The number of records within a batch
+BATCH_SIZE = 48 # The number of records within a batch
 
 NUM_STEPS = 48 # the cut off steps for one time back-prop process
 # TRAINING_STEPS = 10000 # the epoch number of training

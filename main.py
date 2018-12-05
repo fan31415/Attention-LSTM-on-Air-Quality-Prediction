@@ -197,13 +197,7 @@ for idx, dataset in enumerate(datasets):
 
 
 
-# define BATCH_COUNT in global config here
-# the locaton batch rely on this too
-example_data = datasets[0].global_air_lstm_datas[0][0]
-BATCH_COUNT = len(example_data)
-print("BATCH_C ", BATCH_COUNT)
 
-train_length = len(example_data)-1
 
 
 
@@ -304,9 +298,9 @@ class FModel(object):
             self.high_level_fc_outputs = []
             for i in range(self.global_station_num):
                 with tf.variable_scope("higle_level_fc"):
-                    print(self.weather_lstms[i].output.get_shape())
-                    print(self.air_lstms[i].output.get_shape())
-                    print("test")
+                    # print(self.weather_lstms[i].output.get_shape())
+                    # print(self.air_lstms[i].output.get_shape())
+                    # print("test")
                     air_high_level_fc_inputs = tf.concat([self.weather_lstms[i].output,
                                                           self.air_lstms[i].output], axis=1)
                     self.high_level_fc_outputs.append(high_level_fc(air_high_level_fc_inputs))
@@ -431,57 +425,101 @@ def main():
     # np_weather_lstm_datas = np.swapaxes(np.array(weather_lstm_datas), 1, 2)
 
     for model_idx in range(AIR_STATION_NUM):
-        np_local_air = np.array(datasets[0].local_air_lstm_datas[model_idx])
-        np_local_weather = np.array(datasets[0].local_weather_lstm_datas[model_idx])
-        # swap axes so that we can first choose data by trained local station, then get data by bacth_idx
-        np_global_air = np.swapaxes(np.array(datasets[0].global_air_lstm_datas[model_idx]), 0, 1)
-        np_global_weather = np.swapaxes(np.array(datasets[0].global_weather_lstm_datas[model_idx]), 0, 1)
-        np_global_location = np.swapaxes(np.array(datasets[0].global_locations_datas[model_idx]), 0, 1)
-        np_Y = np.array(datasets[0].Y[model_idx])
-
-        print(np.shape(np_local_air))
-        print(np.shape(np_local_weather))
-        print(np.shape(np_global_air))
-        print(np.shape(np_global_weather))
-        print(np.shape(np_global_location))
-        print(np.shape(np_Y))
 
 
 
-        # saver = tf.train.Saver()
+        # for datasets 0
+        # initial step
+        global_station_number = len(datasets[0].global_air[model_idx])
+        train_model = FModel(global_station_number, True)
 
 
         with tf.Session() as sess:
 
-            # for datasets 1
-            # initial step
-            global_station_number = len(datasets[0].global_air[0])
-            train_model = FModel(global_station_number, True)
+            saver = tf.train.Saver()
 
 
 
 
             sess.run(tf.global_variables_initializer())
 
+
+
             step = 0
 
             for epoch_idx in range(TOTAL_EPOCH):
                 print("total epoch :", epoch_idx)
 
-                train_model.global_station_num = len(datasets[0].global_air[0])
+
+
+
+                # define BATCH_COUNT in global config here
+                # the locaton batch rely on this too
+                example_data = datasets[0].global_air_lstm_datas[model_idx][0]
+                BATCH_COUNT = len(example_data)
+                print("BATCH_C ", BATCH_COUNT)
+
+                train_length = len(example_data) - 1
+
+                np_local_air = np.array(datasets[0].local_air_lstm_datas[model_idx])
+                np_local_weather = np.array(datasets[0].local_weather_lstm_datas[model_idx])
+                # swap axes so that we can first choose data by trained local station, then get data by bacth_idx
+                np_global_air = np.swapaxes(np.array(datasets[0].global_air_lstm_datas[model_idx]), 0, 1)
+                np_global_weather = np.swapaxes(np.array(datasets[0].global_weather_lstm_datas[model_idx]), 0, 1)
+                np_global_location = np.swapaxes(np.array(datasets[0].global_locations_datas[model_idx]), 0, 1)
+                np_Y = np.array(datasets[0].Y[model_idx])
+
+                # print(np.shape(np_local_air))
+                # print(np.shape(np_local_weather))
+                # print(np.shape(np_global_air))
+                # print(np.shape(np_global_weather))
+                # print(np.shape(np_global_location))
+                # print(np.shape(np_Y))
+
+                train_model.global_station_num = len(datasets[0].global_air[model_idx])
                 # For every station, run NUM_EPOCH baches
-                for station_idx in range(AIR_STATION_NUM):
-                    # data are all in batches, the first dimension is batch size
 
-                    for i in range(NUM_EPOCH):
-                        print("In iteration ", i)
+                for i in range(FIRST_EPOCH):
+                    print("In iteration ", i)
 
-                        step, total_cost = run_epoch(sess, train_model, BATCH_COUNT, train_model.train_op, True, step,
-                                                     np_local_air, np_local_weather, np_global_air, np_global_weather,
-                                                     np_global_location, np_Y)
-                        print("Step: ", step)
-                        print(total_cost / BATCH_COUNT)
-                        # saver.save(sess, './my_model.model', global_step=step)
+                    step, total_cost = run_epoch(sess, train_model, BATCH_COUNT, train_model.train_op, True, step,
+                                                 np_local_air, np_local_weather, np_global_air, np_global_weather,
+                                                 np_global_location, np_Y)
+                    print("Step: ", step)
+                    print(total_cost / BATCH_COUNT)
+
+
+                # datasets 1
+
+                example_data = datasets[1].global_air_lstm_datas[model_idx][0]
+                BATCH_COUNT = len(example_data)
+                print("BATCH_C ", BATCH_COUNT)
+
+                train_length = len(example_data) - 1
+
+                train_model.global_station_num = len(datasets[1].global_air[model_idx])
+
+                np_local_air = np.array(datasets[1].local_air_lstm_datas[model_idx])
+                np_local_weather = np.array(datasets[1].local_weather_lstm_datas[model_idx])
+                # swap axes so that we can first choose data by trained local station, then get data by bacth_idx
+                np_global_air = np.swapaxes(np.array(datasets[1].global_air_lstm_datas[model_idx]), 0, 1)
+                np_global_weather = np.swapaxes(np.array(datasets[1].global_weather_lstm_datas[model_idx]), 0, 1)
+                np_global_location = np.swapaxes(np.array(datasets[1].global_locations_datas[model_idx]), 0, 1)
+                np_Y = np.array(datasets[1].Y[model_idx])
+
+                for i in range(SECOND_EPOCH):
+                    print("In iteration ", i)
+
+                    step, total_cost = run_epoch(sess, train_model, BATCH_COUNT, train_model.train_op, True, step,
+                                                 np_local_air, np_local_weather, np_global_air, np_global_weather,
+                                                 np_global_location, np_Y)
+                    print("Step: ", step)
+                    print(total_cost / BATCH_COUNT)
+
+
+
+
+                saver.save(sess, './my_model-' + str(model_idx) + ".model", global_step=step)
 
 
 main()

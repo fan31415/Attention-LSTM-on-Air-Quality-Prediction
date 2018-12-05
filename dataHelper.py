@@ -10,7 +10,7 @@ import os
 from config import *
 
 def load_data():
-    up_dir = "/Users/fanyijie/Downloads/5002Data/datapack_5002/"
+    up_dir = DATA_DIR
     files = os.listdir(up_dir)
     data = []
     for file in files:
