@@ -5,21 +5,27 @@ USE_GPU = False
 LEARNING_RATE = 0.005
 
 # the epoch for all local station training
-TOTAL_EPOCH = 100
+TOTAL_EPOCH = 10
 
 # the epoch for one local station training
-NUM_EPOCH = 100
+NUM_EPOCH = 50
 
-BATCH_SIZE = 16 # The number of records within a batch
+SECOND_EPOCH = 80
+
+BATCH_SIZE = 64 # The number of records within a batch
 
 NUM_STEPS = 48 # the cut off steps for one time back-prop process
-TRAINING_STEPS = 10000 # the epoch number of training
+# TRAINING_STEPS = 10000 # the epoch number of training
 
 # BATCH_COUNT = 1
 
-AIR_FEATURE_NUM = 6
+AIR_FEATURE_NUM = 3
 
-LSTM_HIDDEN_SIZE = 100
+LOCAL_WEATHER_FEATURE_NUM = 4
+
+LSTM_HIDDEN_SIZE = 128
+
+ATTENTION_CHOSEN_HIDDEN_SIZE = 32
 
 # WEATHER_STATION_NUM = 18
 AIR_STATION_NUM = 35
@@ -33,7 +39,10 @@ GRID_WEAtHER_STATION_NUM = 30
 
 WEATHER_FEATURE_NUM = 5
 
-LOCATION_FEATURE_NUM = 2
+ATTENTION_JUDGE_FEATURE_NUM = 6
+
+
+# LOCATION_FEATURE_NUM = 2
 
 ATTENTION_HIDDEN_SIZE = 100
 

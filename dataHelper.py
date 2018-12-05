@@ -50,11 +50,22 @@ def generate_location_batch_data(inputs, batch_count, sequence_length):
 
 
 # inputs will be shape [time_count, feature_number]
-def generate_air_quality_lstm_data(inputs, batch_size, num_steps):
+def generate_lstm_data(inputs, batch_size = BATCH_SIZE, num_steps = NUM_STEPS, hasLabel = False, stop_before = 0):
+    # params:
+    # stop_before: stop sequence before stop_before days before sequence end
     columns = list(inputs)
     feature_num = len(columns)
 
     row_count = inputs.shape[0]
+
+
+
+    # Notcie weather data longer than air quality two days
+    # row_count = row_count - NUM_STEPS
+    # inputs = inputs[:-NUM_STEPS]
+    if stop_before != 0:
+        row_count = row_count - stop_before
+        inputs = inputs[:-stop_before]
 
     take_count = row_count - 1
 
@@ -67,10 +78,11 @@ def generate_air_quality_lstm_data(inputs, batch_size, num_steps):
     input_X = inputs.iloc[- take_count - 1: - 1]
 
     # we only need the label data to be our labels
-    data_Y = inputs[Labels]
+    if hasLabel:
+        data_Y = inputs[Labels]
     # predict data will be start after lstm feedforwad through the first num steps data
     # Y start will be one hour later than X to be our label
-    Y = data_Y.iloc[- take_count:]
+        Y = data_Y.iloc[- take_count:]
 
     # Normalized Data
     scaler = StandardScaler()
@@ -79,7 +91,8 @@ def generate_air_quality_lstm_data(inputs, batch_size, num_steps):
     #     Arrange X into sequence list
     sequence_X = []
 
-    sequence_Y = []
+    if hasLabel:
+        sequence_Y = []
 
     sequence_count = row_count
     for i in range(take_count):
@@ -87,8 +100,9 @@ def generate_air_quality_lstm_data(inputs, batch_size, num_steps):
             sequence_count = i
             break
         sequence_X.append(input_X[i:i + num_steps])
+        if hasLabel:
         # Y start already earlier than X one hour, so here we should minus 1, it will get the correspond Y for X
-        sequence_Y.append(Y.values[i + num_steps - 1])
+            sequence_Y.append(Y.values[i + num_steps - 1])
 
     # Make Batch
     # batch_size is the actuall training records' batch size
@@ -98,23 +112,26 @@ def generate_air_quality_lstm_data(inputs, batch_size, num_steps):
     # clip the margin data
 
     sequence_X = sequence_X[-actuall_count:]
-    sequence_Y = sequence_Y[-actuall_count:]
+    if hasLabel:
+        sequence_Y = sequence_Y[-actuall_count:]
 
     X_batches = np.split(np.array(sequence_X), batch_count)
+    if hasLabel:
+        Y_batches = np.split(np.array(sequence_Y), batch_count)
+    if hasLabel:
+        return X_batches, Y_batches
+    else:
+        return  X_batches
 
-    Y_batches = np.split(np.array(sequence_Y), batch_count)
-
-    return X_batches, Y_batches
-
-def generate_weather_lstm_data(inputs, batch_size, num_steps):
+def generate_weather_lstm_data(inputs, batch_size = BATCH_SIZE, num_steps = NUM_STEPS):
     columns = list(inputs)
     feature_num = len(columns)
 
     row_count = inputs.shape[0]
 
     # Notcie weather data longer than air quality two days
-    row_count = row_count - 48
-    inputs = inputs[:-48]
+    row_count = row_count - NUM_STEPS
+    inputs = inputs[:-NUM_STEPS]
 
     take_count = row_count - 1
 
@@ -155,3 +172,54 @@ def generate_weather_lstm_data(inputs, batch_size, num_steps):
     X_batches = np.split(np.array(sequence_X), batch_count)
 
     return X_batches
+
+
+def generate_locations_data(inputs, batch_size = BATCH_SIZE, num_steps = NUM_STEPS):
+    columns = list(inputs)
+    feature_num = len(columns)
+
+    row_count = inputs.shape[0]
+
+
+    take_count = row_count - 1
+
+
+    # inputs = inputs.iloc()
+
+
+    # print("take count ", take_count)
+
+    # Adjust to make Y one hour later than X inherently
+
+    # The last time data will be one of our predictions, so will not include in our input_X
+    # To make input X has proper shape, I start the index from n-1
+
+    input_X = inputs.iloc[- take_count - 1: - 1]
+
+    # Normalized Data
+    scaler = StandardScaler()
+    input_X = scaler.fit_transform(input_X)
+
+    #     Arrange X into sequence list
+    sequence_X = []
+    sequence_count = row_count
+    for i in range(take_count):
+        if i > take_count - num_steps:
+            sequence_count = i
+            break
+        sequence_X.append(input_X[i])
+
+    # Make Batch
+    # batch_size is the actuall training records' batch size
+    batch_count, actuall_count = getBatchCount(sequence_count)
+
+    # clip the margin data
+
+    sequence_X = sequence_X[-actuall_count:]
+
+    X_batches = np.split(np.array(sequence_X), batch_count)
+
+    return X_batches
+
+
+

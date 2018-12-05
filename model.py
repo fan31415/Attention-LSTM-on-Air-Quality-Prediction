@@ -43,6 +43,13 @@ def predict_layer(inputs, hidden_size = PREDICT_LAYER_HIDDEN_SIZE):
 
     return outputs
 
+def attention_chosen_layer(inputs, hidden_size = ATTENTION_CHOSEN_HIDDEN_SIZE):
+    with tf.variable_scope("attention_chosen"):
+        outputs = tf.contrib.layers.fully_connected(inputs, hidden_size)
+        print("test")
+        print(outputs.get_shape())
+    return outputs
+
 # inputs should be a vector from last layer's output
 # because of batch training, this actually will be a matrix [batch_size, hidden_size]
 
@@ -101,7 +108,9 @@ def attention_layer(station_inputs, local_inputs, batch_size, hidden_size1, hidd
             with tf.variable_scope("attention_score-" + str(idx)):
                 # feed_inputs = tf.concat([staion_input, local_inputs], axis=1)
                 # hidden_size is the hidden_size in inputs tensor (the last dimenstion tensor)
-                raw_score = get_attention_raw_score(staion_input, local_inputs, batch_size, hidden_size1, hidden_size2)
+
+                #notice that local_inputs is also an array
+                raw_score = get_attention_raw_score(staion_input, local_inputs[idx], batch_size, hidden_size1, hidden_size2)
                 scores.append(raw_score)
         # get scores
         scores = tf.nn.softmax(scores, axis=0)
@@ -143,11 +152,9 @@ def attention_layer_uni_input(station_inputs, batch_size, hidden_size):
         # output = tf.reduce_sum(tf.multiply(scores, station_inputs))
         return output
 
-
-
 class LSTM_model(object):
-    def __init__(self, inputs, batch_size=BATCH_SIZE, state_size=LSTM_HIDDEN_SIZE, layer_num=2, num_steps=NUM_STEPS,
-                 feature_num=AIR_FEATURE_NUM):
+    def __init__(self, inputs, batch_size=BATCH_SIZE, state_size=LSTM_HIDDEN_SIZE, layer_num=2):
+        self.cur_batch = 0
 
         if USE_GPU:
             # time major for cudnn_rnn
@@ -155,9 +162,8 @@ class LSTM_model(object):
 
             self.cell = tf.contrib.cudnn_rnn.CudnnLSTM(layer_num, state_size)
 
-
-            h = tf.get_variable('hidden_h', [layer_num, batch_size, state_size], initializer=UniformInitializer)
-            c = tf.get_variable('hidden_c', [layer_num, batch_size, state_size], initializer=UniformInitializer)
+            h = tf.get_variable('hidden_h', [layer_num, batch_size, state_size])
+            c = tf.get_variable('hidden_c', [layer_num, batch_size, state_size])
 
             # self.state = self.cell.zero_state(batch_size, dtype=tf.float32)
             self.state = tf.contrib.rnn.LSTMStateTuple(h=h, c=c)
@@ -173,28 +179,38 @@ class LSTM_model(object):
         else:
             self.inputs = inputs
             self.stacked_cell = tf.nn.rnn_cell.MultiRNNCell([tf.nn.rnn_cell.LSTMCell(state_size) \
-                                                        for _ in range(layer_num)])
+                                                             for _ in range(layer_num)])
 
-            self.state = self.stacked_cell.zero_state(batch_size, dtype=tf.float32)
+            self.initial_state = self.stacked_cell.zero_state(batch_size, dtype=tf.float32)
+
+            self.state = self.initial_state
 
             # state = self.init_state
 
             # print(self.inputs.get_shape())
 
-
         #         print("lstm ", outputs)
         #     self.final_state = state
 
-    def __call__(self, *args, **kwargs):
+    def __call__(self):
         if USE_GPU:
             outputs, self.state = self.cell(self.inputs, initial_state=self.state)
             outputs = tf.transpose(outputs, [1, 0, 2])
             return outputs[:, -1, :]
 
         else:
+            # self.state = self.stacked_cell.zero_state(BATCH_SIZE, dtype=tf.float32)
             outputs, self.state = tf.nn.dynamic_rnn(self.stacked_cell,
-                                               self.inputs, initial_state=self.state, dtype=tf.float32)
+                                                           self.inputs, initial_state= self.state, dtype=tf.float32)
+            # outputs, self.state = tf.nn.dynamic_rnn(self.stacked_cell,
+            #                                         self.inputs, dtype=tf.float32)
+            # outputs, _ = tf.nn.dynamic_rnn(self.stacked_cell,
+            #                                         self.inputs, dtype=tf.float32)
+            # self.final_state = self.state
+            #             print(self.state)
             return outputs[:, -1, :]
 
+    def set_state(self, state):
+        self.initial_state = state
 
 

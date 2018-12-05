@@ -61,7 +61,7 @@ for idx, locations in enumerate(grid_location_by_station):
 air_lstm_datas= [None] * AIR_STATION_NUM
 Y = [None] * AIR_STATION_NUM
 for i in range(AIR_STATION_NUM):
-    air_lstm_datas[i], Y[i] = generate_air_quality_lstm_data(air_qualities[i], BATCH_SIZE, NUM_STEPS)
+    air_lstm_datas[i], Y[i] = generate_lstm_data(air_qualities[i], BATCH_SIZE, NUM_STEPS)
 
 # generate weather lstm data
 weather_lstm_datas= [[None] * GRID_WEAtHER_STATION_NUM] * AIR_STATION_NUM
