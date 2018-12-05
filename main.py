@@ -214,7 +214,9 @@ for idx, dataset in enumerate(datasets):
 # print(air_lstm_datas[0][0])
 # exit()
 class FModel(object):
-    def __init__(self, global_station_num, is_training):
+    def __init__(self, global_station_num, is_training, sess=None):
+        self.global_bp_cnt = 0  # a counter to record the times running BackPropagation
+        self.sess = sess
         self.global_station_num = global_station_num
         self.batch_size = BATCH_SIZE
         self.num_steps = NUM_STEPS
@@ -344,6 +346,8 @@ class FModel(object):
 
         # average cost
         self.cost = tf.div(tf.reduce_sum(self.losses), BATCH_SIZE)
+        tf.summary.scalar('train cost', self.cost)
+
         # self.train_op = tf.contrib.layers.optimize_loss(
         #     loss, tf.train.get_global_step(), optimizer="Adam", learning_rate=0.01)
 
@@ -351,11 +355,15 @@ class FModel(object):
             return
 
         self.train_op = tf.train.AdamOptimizer(LEARNING_RATE).minimize(self.cost)
+        self.merged_summary = tf.summary.merge_all()
+        if self.sess is not None:
+           self.train_writer = tf.summary.FileWriter('./logs/train/', sess.graph)
+           self.test_writer = tf.summary.FileWriter('./logs/test')
 
 
 def run_epoch(session, model, batch_count, train_op, output_log, step,
               np_local_air, np_local_weather, np_global_air, np_global_weather,
-              np_global_location, targets):
+              np_global_location, targets, big_iter=0):
     total_costs = 0.0
     iters = 0
 
@@ -393,9 +401,10 @@ def run_epoch(session, model, batch_count, train_op, output_log, step,
         #                                 model.weather_lstms_states: weather_states,
         #                                 model.air_lstms_states: air_states})
 
+        model.global_bp_cnt += 1
 
-        cost, _, output, losses = session.run(
-            [model.cost, train_op, model.results, model.losses],
+        cost, _, output, losses, summary = session.run(
+            [model.cost, train_op, model.results, model.losses, model.merged_summary],
             {model.local_air_lstm_inputs: np_local_air[batch_idx],
              # the input below is all list of batch data
              model.local_weather_lstm_inputs: np_local_weather[batch_idx],
@@ -407,6 +416,7 @@ def run_epoch(session, model, batch_count, train_op, output_log, step,
         #         cost, _ = session.run([model.cost, train_op], {model.targets: y[0][batch_idx],
         #
         #                                                model.temp_targets: train_Y})
+        model.train_writer.add_summary(summary, model.global_bp_cnt)
         iters += 1
         print(iters)
         print(cost)
@@ -440,7 +450,9 @@ def main():
         tf.reset_default_graph()
 
         global_station_number = len(datasets[0].global_air[model_idx])
-        train_model = FModel(global_station_number, True)
+        sess = tf.InteractiveSession()
+
+        train_model = FModel(global_station_number, True, sess=sess)
 
 
 
@@ -492,7 +504,7 @@ def main():
 
                     step, total_cost = run_epoch(sess, train_model, BATCH_COUNT, train_model.train_op, True, step,
                                                  np_local_air, np_local_weather, np_global_air, np_global_weather,
-                                                 np_global_location, np_Y)
+                                                 np_global_location, np_Y, big_iter=i)
                     print("Step: ", step)
                     print(total_cost / BATCH_COUNT)
 

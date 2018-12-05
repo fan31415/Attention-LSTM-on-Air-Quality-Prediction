@@ -223,3 +223,5 @@ def generate_locations_data(inputs, batch_size = BATCH_SIZE, num_steps = NUM_STE
 
 
 
+
+
