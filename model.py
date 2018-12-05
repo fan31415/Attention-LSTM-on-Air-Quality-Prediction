@@ -165,7 +165,7 @@ class LSTM_model(object):
             # h = tf.get_variable('hidden_h', [layer_num, batch_size, state_size])
             # c = tf.get_variable('hidden_c', [layer_num, batch_size, state_size])
 
-            self.state = self.cell.zero_state(batch_size, dtype=tf.float32)
+            # self.state = self.cell.zero_state(batch_size, dtype=tf.float32)
             # self.state = tf.contrib.rnn.LSTMStateTuple(h=h, c=c)
 
             # self.init_state = tf.get_variable('initial_state',

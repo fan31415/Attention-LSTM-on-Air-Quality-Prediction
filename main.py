@@ -246,10 +246,10 @@ class FModel(object):
         self.air_lstms_states = []
 
 
-        with tf.variable_scope("loccal_air_lstm") as scope:
+        with tf.variable_scope("loccal_air_lstm", reuse=tf.AUTO_REUSE) as scope:
             self.local_air_lstm = LSTM_model(self.local_air_lstm_inputs)
 
-        with tf.variable_scope("local_weather_lstm"):
+        with tf.variable_scope("local_weather_lstm", reuse=tf.AUTO_REUSE):
             self.local_weather_lstm = LSTM_model(self.local_weather_lstm_inputs)
 
 
@@ -345,6 +345,9 @@ class FModel(object):
         # self.train_op = tf.contrib.layers.optimize_loss(
         #     loss, tf.train.get_global_step(), optimizer="Adam", learning_rate=0.01)
 
+        if not is_training:
+            return
+
         self.train_op = tf.train.AdamOptimizer(LEARNING_RATE).minimize(self.cost)
 
 
@@ -355,12 +358,12 @@ def run_epoch(session, model, batch_count, train_op, output_log, step,
     iters = 0
 
     # global states, each is different air state
-    air_states = [session.run(model.air_lstms[0].initial_state)] * AIR_STATION_NUM
-    weather_states = [session.run(model.weather_lstms[0].initial_state)] * AIR_STATION_NUM
-
-    local_weather_state = session.run(model.local_weather_lstm.initial_state)
-
-    local_air_state = session.run(model.local_air_lstm.initial_state)
+    # air_states = [session.run(model.air_lstms[0].initial_state)] * AIR_STATION_NUM
+    # weather_states = [session.run(model.weather_lstms[0].initial_state)] * AIR_STATION_NUM
+    #
+    # local_weather_state = session.run(model.local_weather_lstm.initial_state)
+    #
+    # local_air_state = session.run(model.local_air_lstm.initial_state)
 
     for batch_idx in range(batch_count):
 
@@ -387,6 +390,7 @@ def run_epoch(session, model, batch_count, train_op, output_log, step,
         #                                 model.local_air_lstm.initial_state: local_air_state,
         #                                 model.weather_lstms_states: weather_states,
         #                                 model.air_lstms_states: air_states})
+
 
         cost, _, output, losses = session.run(
             [model.cost, train_op, model.results, model.losses],
@@ -437,9 +441,6 @@ def main():
         with tf.Session() as sess:
 
             saver = tf.train.Saver()
-
-
-
 
             sess.run(tf.global_variables_initializer())
 
@@ -521,5 +522,7 @@ def main():
 
                 saver.save(sess, './my_model-' + str(model_idx) + ".model", global_step=step)
 
+
+def
 
 main()
