@@ -436,13 +436,16 @@ def main():
 
         # for datasets 0
         # initial step
+
+        tf.reset_default_graph()
+
         global_station_number = len(datasets[0].global_air[model_idx])
         train_model = FModel(global_station_number, True)
 
 
+
         with tf.Session() as sess:
 
-            tf.reset_default_graph()
 
             saver = tf.train.Saver()
 
