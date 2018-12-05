@@ -369,7 +369,7 @@ class FModel(object):
 
         # average cost
         self.cost = tf.div(tf.reduce_sum(self.losses), BATCH_SIZE)
-        tf.summary.scalar('train cost', self.cost)
+        tf.summary.scalar('train cost[%s]' % self.model_id, self.cost)
 
         # self.train_op = tf.contrib.layers.optimize_loss(
         #     loss, tf.train.get_global_step(), optimizer="Adam", learning_rate=0.01)
