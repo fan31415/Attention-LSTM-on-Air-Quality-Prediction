@@ -312,7 +312,7 @@ class FModel(object):
                 self.attention_chosen_outputs.append(attention_chosen_layer(self.attention_chosen_inputs[i]))
 
         # Is use local lstm to feed directly without fc OK?
-        with tf.variable_scope("air_attention"):
+        with tf.variable_scope("air_attention", reuse = tf.AUTO_REUSE):
 
 
             air_station_attention_output = attention_layer(self.high_level_fc_outputs, self.attention_chosen_outputs,
@@ -523,6 +523,8 @@ def main():
                 saver.save(sess, './my_model-' + str(model_idx) + ".model", global_step=step)
 
 
-def
+def predict():
+    pass
+
 
 main()
