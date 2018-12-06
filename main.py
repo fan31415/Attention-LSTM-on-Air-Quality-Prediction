@@ -412,7 +412,7 @@ def run_epoch(session, model, batch_count, train_op, output_log, step,
 
     for batch_idx in range(batch_count):
 
-        print("In batch " + str(batch_idx))
+        # print("In batch " + str(batch_idx))
         # print(np.shape(np_local_air))
         # print(np.shape(np_local_weather))
         # print(np.shape(np_global_air))
@@ -562,6 +562,7 @@ def main():
 
 
                 cv_err_history = np.array([])
+                min_loss = float("inf")
                 for i in range(SECOND_EPOCH):
                     # train/cv generate
                     ####
@@ -609,10 +610,15 @@ def main():
                     cv_avg_err = cv_errs/cv_batches
 
                     if len(cv_err_history) > EARLY_STOP:
-                        if cv_avg_err > np.min(cv_err_history[-EARLY_STOP:]):
+                        if cv_avg_err >= min_loss:
                             print("Early Stop. Because loss not decrease for 50 epoches")
                             break
-                    cv_err_history = np.append(cv_err_history, cv_avg_err)[-EARLY_STOP-1:]
+                        else:
+                            min_loss = cv_avg_err
+                            cv_err_history = np.array([])
+
+                    cv_err_history = np.append(cv_err_history, cv_avg_err)
+                    print(cv_err_history)
 
 
 
