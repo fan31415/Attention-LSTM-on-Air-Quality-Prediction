@@ -367,9 +367,24 @@ class FModel(object):
 
         self.losses = tf.square(tf.subtract(self.targets, self.results))
 
+        beta = 0.2
+        params = tf.trainable_variables()
+        params_need_reg = []
+        reg_loss = None
+        for i in range(len(params)):
+            if "weigh" in params[i].name:
+                params_need_reg.append(params[i])
+                print(params[i].name)
+                if reg_loss is None:
+                    reg_loss = tf.nn.l2_loss(params[i])
+                else:
+                    reg_loss += tf.nn.l2_loss(params[i])
         # average cost
-        self.cost = tf.div(tf.reduce_sum(self.losses), BATCH_SIZE)
-        tf.summary.scalar('train cost[%s]' % self.model_id, self.cost)
+        self.cost_pure = tf.div(tf.reduce_sum(self.losses), BATCH_SIZE)
+        self.cost = tf.div(tf.reduce_sum(self.losses) + beta*reg_loss, BATCH_SIZE)
+        tf.summary.scalar('train pure cost[%s]' % self.model_id, self.cost_pure)
+        tf.summary.scalar('train cost with reg[%s]' % self.model_id, self.cost)
+
 
         # self.train_op = tf.contrib.layers.optimize_loss(
         #     loss, tf.train.get_global_step(), optimizer="Adam", learning_rate=0.01)
@@ -380,13 +395,7 @@ class FModel(object):
         self.train_op = tf.train.AdamOptimizer(LEARNING_RATE).minimize(self.cost)
         self.merged_summary = tf.summary.merge_all()
 
-        params = tf.trainable_variables()
-        for i in range(len(params)):
-            print(params[i].name)
-            print("\n")
-        print("\n\n\n")
-        reg_params = tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES)
-        print(reg_params)
+
         if self.sess is not None:
            self.train_writer = tf.summary.FileWriter('./logs/train/', sess.graph)
            self.test_writer = tf.summary.FileWriter('./logs/test')

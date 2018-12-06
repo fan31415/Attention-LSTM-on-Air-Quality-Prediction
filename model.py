@@ -166,8 +166,6 @@ class LSTM_model(object):
             self.inputs = tf.transpose(inputs, [1, 0, 2])
 
             self.cell = tf.contrib.cudnn_rnn.CudnnLSTM(layer_num, state_size)
-            print("lstm trainable var:", self.cell.trainable_variables)
-            print("lstm trainable W:", self.cell.trainable_weights)
 
 
             # h = tf.get_variable('hidden_h', [layer_num, batch_size, state_size])
