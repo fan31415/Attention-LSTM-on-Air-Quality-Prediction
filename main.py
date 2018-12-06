@@ -369,6 +369,9 @@ class FModel(object):
 
         self.losses = tf.square(tf.subtract(self.targets, self.results))
 
+        self.losses = tf.div(tf.abs(tf.subtract(self.targets, self.results)),
+                             tf.div(tf.add(self.targets, self.results), 2))
+
         beta = 0.2
         params = tf.trainable_variables()
         params_need_reg = []
@@ -384,8 +387,9 @@ class FModel(object):
                     reg_loss += tf.nn.l2_loss(params[i])
         # average cost
         self.cost_pure = tf.div(tf.reduce_sum(self.losses), BATCH_SIZE)
-        self.cost = tf.div(tf.reduce_sum(self.losses) + beta*reg_loss, BATCH_SIZE)
-        tf.summary.scalar('train pure cost[%s]' % self.model_id, self.cost_pure)
+        self.cost = self.cost_pure
+        # self.cost = tf.div(tf.reduce_sum(self.losses) + beta*reg_loss, BATCH_SIZE)
+        # tf.summary.scalar('train pure cost[%s]' % self.model_id, self.cost_pure)
         tf.summary.scalar('train cost with reg[%s]' % self.model_id, self.cost)
 
 
