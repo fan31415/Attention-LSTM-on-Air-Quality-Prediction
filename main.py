@@ -23,7 +23,7 @@ from config import *
 # error_log = open("myerror.log", "w")
 # sys.stderr = error_log
 
-trainDataByStation, _ = load_data()
+trainDataByStation, station_files = load_data()
 
 testDataByStation, files = load_data(dir = TEST_DATA_DIR)
 testDataDict = {}
@@ -39,6 +39,7 @@ for idx, file in enumerate(files):
 #     for j in range(len(trainDataByStation[i][2])):
 #         trainDataByStation[i][2][j] = trainDataByStation[i][2][j][:-48]
 
+pd.options.mode.chained_assignment = None
 
 print(len(trainDataByStation))
 
@@ -819,6 +820,7 @@ def predict():
             saver.restore(sess, "my_model-0-acc-0.5583217740058899-40")
             batch_idx = BATCH_COUNT-1
             # sess.run(eval_model.results)
+            result_pd = pd.DataFrame(columns=["PM2.5", "PM10", "O3"])
 
             for i in range(48):
                 cost, _, output, losses = sess.run(
@@ -855,8 +857,9 @@ def predict():
                 np_global_location = np.swapaxes(np.array(dataset.global_locations_datas[model_idx]), 0, 1)
                 np_Y = np.array(dataset.Y[model_idx])
 
-
+                result_pd.loc[result_pd.shape[0], :] = result
                 print(result)
+            result_pd.to_csv("station_" + station_files[model_idx] + ".csv")
             # print(output)
 
 
