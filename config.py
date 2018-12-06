@@ -4,7 +4,7 @@ DATA_DIR = "./data/"
 
 USE_GPU = True
 
-LEARNING_RATE = 0.0005
+LEARNING_RATE = 0.001
 
 EARLY_STOP = 400
 

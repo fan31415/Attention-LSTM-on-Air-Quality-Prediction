@@ -428,7 +428,6 @@ def run_epoch(session, model, batch_count, train_op, output_log, step,
         # print(np.shape(np_global_location))
         # print(np.shape(targets))
 
-
         if is_test:
             model.global_test_cnt += 1
             cost, output, losses, summary, ape_loss = session.run(
@@ -442,6 +441,7 @@ def run_epoch(session, model, batch_count, train_op, output_log, step,
                  model.targets: targets[batch_idx],
                  })
             print("ape:", ape_loss)
+            cost = ape_loss
             model.test_writer.add_summary(summary, model.global_test_cnt)
             iters += 1
             # print("test: ", iters)
@@ -626,7 +626,7 @@ def main():
                             test_err_history = np.array([])
 
                     test_err_history = np.append(test_err_history, test_err)
-                    print(test_err_history)
+                    # print(test_err_history)
 
 
 def predict():
