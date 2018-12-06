@@ -152,9 +152,6 @@ def attention_layer_uni_input(station_inputs, batch_size, hidden_size):
         t_multi = tf.multiply(t_scores, t_input)
         t_split = tf.split(t_multi, hidden_size, axis=1)
         output = tf.reduce_sum(t_split, axis=1)
-
-        # scores = tf.nn.softmax(scores, axis=0)
-        # output = tf.reduce_sum(tf.multiply(scores, station_inputs))
         return output
 
 
@@ -167,20 +164,6 @@ class LSTM_model(object):
             self.inputs = tf.transpose(inputs, [1, 0, 2])
 
             self.cell = tf.contrib.cudnn_rnn.CudnnLSTM(layer_num, state_size)
-
-
-            # h = tf.get_variable('hidden_h', [layer_num, batch_size, state_size])
-            # c = tf.get_variable('hidden_c', [layer_num, batch_size, state_size])
-
-            # self.state = self.cell.zero_state(batch_size, dtype=tf.float32)
-            # self.state = tf.contrib.rnn.LSTMStateTuple(h=h, c=c)
-
-            # self.init_state = tf.get_variable('initial_state',
-            #                                   [tf.random_uniform(cell.state_shape(batch_size)[0]),
-            #                                    tf.random_uniform(cell.state_shape(batch_size)[1])])
-
-            # self.init_state = (tf.contrib.rnn.LSTMStateTuple(h=self.init_state[1], c=self.init_state[0]),)
-            # state = self.init_state
 
             outputs, _ = self.cell(self.inputs)
             outputs = tf.transpose(outputs, [1, 0, 2])
@@ -198,17 +181,6 @@ class LSTM_model(object):
                                            self.inputs, initial_state=self.initial_state, dtype=tf.float32)
 
             self.output = outputs[:, -1, :]
-            # state = self.init_state
-
-            # print(self.inputs.get_shape())
-
-        #         print("lstm ", outputs)
-        #     self.final_state = state
-
-
-
-
-
 
 class Stateful_LSTM_model(object):
     def __init__(self, inputs, batch_size=BATCH_SIZE, state_size=LSTM_HIDDEN_SIZE, layer_num=2):
@@ -223,16 +195,7 @@ class Stateful_LSTM_model(object):
             h = tf.get_variable('hidden_h', [layer_num, batch_size, state_size])
             c = tf.get_variable('hidden_c', [layer_num, batch_size, state_size])
 
-            # self.state = self.cell.zero_state(batch_size, dtype=tf.float32)
             self.state = tf.contrib.rnn.LSTMStateTuple(h=h, c=c)
-
-            # self.init_state = tf.get_variable('initial_state',
-            #                                   [tf.random_uniform(cell.state_shape(batch_size)[0]),
-            #                                    tf.random_uniform(cell.state_shape(batch_size)[1])])
-
-            # self.init_state = (tf.contrib.rnn.LSTMStateTuple(h=self.init_state[1], c=self.init_state[0]),)
-            # state = self.init_state
-
 
         else:
             self.inputs = inputs
@@ -243,12 +206,6 @@ class Stateful_LSTM_model(object):
 
             self.state = self.initial_state
 
-            # state = self.init_state
-
-            # print(self.inputs.get_shape())
-
-        #         print("lstm ", outputs)
-        #     self.final_state = state
 
     def __call__(self):
         if USE_GPU:
@@ -260,12 +217,6 @@ class Stateful_LSTM_model(object):
             # self.state = self.stacked_cell.zero_state(BATCH_SIZE, dtype=tf.float32)
             outputs, self.state = tf.nn.dynamic_rnn(self.stacked_cell,
                                                            self.inputs, initial_state= self.state, dtype=tf.float32)
-            # outputs, self.state = tf.nn.dynamic_rnn(self.stacked_cell,
-            #                                         self.inputs, dtype=tf.float32)
-            # outputs, _ = tf.nn.dynamic_rnn(self.stacked_cell,
-            #                                         self.inputs, dtype=tf.float32)
-            # self.final_state = self.state
-            #             print(self.state)
             return outputs[:, -1, :]
 
     def set_state(self, state):

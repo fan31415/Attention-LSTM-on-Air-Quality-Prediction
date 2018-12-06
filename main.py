@@ -18,11 +18,6 @@ from dataHelper import *
 
 from config import *
 
-# log = open("myprog.log","w")
-# sys.stdout = log
-# error_log = open("myerror.log", "w")
-# sys.stderr = error_log
-
 trainDataByStation, station_files = load_data()
 
 testDataByStation, files = load_data(dir = TEST_DATA_DIR)
@@ -32,12 +27,6 @@ for idx, file in enumerate(files):
     name = file.split('.')[0].split('_')[2:4]
     name = "_".join(name)
     testDataDict[name] = testDataByStation[idx]
-
-# do this due to data generalization not consist here
-# for i in range(AIR_STATION_NUM):
-#     trainDataByStation[i][0] = trainDataByStation[i][0][:-48]
-#     for j in range(len(trainDataByStation[i][2])):
-#         trainDataByStation[i][2][j] = trainDataByStation[i][2][j][:-48]
 
 pd.options.mode.chained_assignment = None
 
@@ -141,9 +130,6 @@ dataset.global_air = deepcopy(global_air)
 dataset.global_locations = deepcopy(global_locations)
 
 
-
-
-
 # For predict
 dataset.test_local_weather = []
 dataset.test_global_locations = []
@@ -190,12 +176,6 @@ for i in range(AIR_STATION_NUM):
         dataset.test_append_location[i].append(global_locations[i][j]["2018-05-01 00:00:00":"2018-05-02 23:00:00"])
         dataset.test_append_global_weather[i].append(global_weather[i][j]["2018-05-01 00:00:00":"2018-05-02 23:00:00"])
 
-
-
-
-
-
-
 datasets.append(deepcopy(dataset))
 
 preprocessor_list = []
@@ -238,21 +218,6 @@ for i in range(AIR_STATION_NUM):
     num = len(dataset.global_weather[i])
     indexes.append(list(datasets[1].global_weather[i].index))
 
-#
-# print(len(datasets[0].global_locations[0]))
-#
-# exit()
-# Normalize none list data
-# for dataset in datasets:
-#     # enumerate by station
-#     for idx, local_air in enumerate(dataset.local_air):
-#         scaler = StandardScaler()
-#         dataset.local_air[idx] = scaler.fit_transform(dataset.local_air[idx])
-#
-#     for idx, local_weather in enumerate(dataset.local_weather):
-#         scaler = StandardScaler()
-#         dataset.local_weather[idx] = scaler.fit_transform(dataset.local_weather[idx])
-
 def deal_dataset(origin_dataset):
     dataset = deepcopy(origin_dataset)
     dataset.local_air_lstm_datas = [None] * AIR_STATION_NUM
@@ -293,56 +258,7 @@ def deal_dataset(origin_dataset):
 # generate local air lstm data
 for idx, dataset in enumerate(datasets):
     datasets[idx] = deal_dataset(dataset)
-    # datasets[idx].local_air_lstm_datas = [None] * AIR_STATION_NUM
-    # datasets[idx].Y = [None] * AIR_STATION_NUM
-    # for i in range(AIR_STATION_NUM):
-    #     # For one whole training, we only pick one data
-    #     datasets[idx].local_air_lstm_datas[i], datasets[idx].Y[i] = generate_lstm_data(dataset.local_air[i], hasLabel=True)
-    #
-    # datasets[idx].local_weather_lstm_datas = [None] * AIR_STATION_NUM
-    # for i in range(AIR_STATION_NUM):
-    #     datasets[idx].local_weather_lstm_datas[i] = generate_lstm_data(dataset.local_weather[i], stop_before=0)
-    #
-    #
-    # datasets[idx].global_air_lstm_datas = [None] * AIR_STATION_NUM
-    # for i in range(AIR_STATION_NUM):
-    #     datasets[idx].global_air_lstm_datas[i] = []
-    #     num = len(dataset.global_air[i])
-    #     for j in range(num):
-    #         datasets[idx].global_air_lstm_datas[i].append(generate_lstm_data(dataset.global_air[i][j]))
-    #
-    # datasets[idx].global_weather_lstm_datas = [None] * AIR_STATION_NUM
-    # for i in range(AIR_STATION_NUM):
-    #     datasets[idx].global_weather_lstm_datas[i]= []
-    #     num = len(dataset.global_weather[i])
-    #     for j in range(num):
-    #         datasets[idx].global_weather_lstm_datas[i].append(generate_lstm_data(dataset.global_weather[i][j], stop_before=0))
-    #
-    # datasets[idx].global_locations_datas = [None] * AIR_STATION_NUM
-    # for i in range(AIR_STATION_NUM):
-    #     datasets[idx].global_locations_datas[i] = []
-    #     num = len(dataset.global_weather[i])
-    #     for j in range(num):
-    #         datasets[idx].global_locations_datas[i].append(generate_locations_data(dataset.global_locations[i][j]))
 
-# dataset_idx : [current local station number, global air station num around current local station, batch count]
-# print(datasets[0].global_air_lstm_datas[0][0][0])
-#
-# print("test")
-#
-# print(datasets[0].global_air_lstm_datas[0][0][1])
-
-# print(np.shape(weather_locations_shared_fc_feed))
-
-#
-# print(air_locations_shared_fc_feed[0][0])
-# print(air_locations_shared_fc_feed[0][1])
-# print(weather_locations_shared_fc_feed[0][0])
-# print(weather_locations_shared_fc_feed[0][1])
-#
-# print(air_lstm_datas[0])
-# print(air_lstm_datas[0][0])
-# exit()
 class FModel(object):
     def __init__(self, global_station_num, is_training, sess=None, model_id=-1):
         self.global_bp_cnt = 0  # a counter to record the times running BackPropagation
@@ -353,13 +269,7 @@ class FModel(object):
         self.num_steps = NUM_STEPS
         self.model_id = model_id
 
-        # there seems can use tf.int32?
         self.targets = tf.placeholder(tf.float32, [BATCH_SIZE, len(Labels)])
-
-        #         self.air_lstm_inputs = tf.placeholder(tf.float32, [batch_size])
-        # self.temp_targets = tf.placeholder(tf.float32, [batch_size])
-
-
 
         # Build Model
 
@@ -394,11 +304,7 @@ class FModel(object):
 
             for i in range(self.global_station_num):
                 model = LSTM_model(self.air_lstm_inputs[i])
-                # if self.air_lstms_states != []:
-                #     print(len(self.air_lstms_states))
-                #     model.set_state(self.air_lstms_states[i])
                 self.air_lstms.append(model)
-                # self.air_lstms_states.append(self.air_lstms[i].state)
         # share parametes between them
         with tf.variable_scope("weather_lstm", reuse=tf.AUTO_REUSE):
 
@@ -410,21 +316,6 @@ class FModel(object):
                 self.weather_lstms.append(model)
                 # self.weather_lstms_states.append(self.weather_lstms[i].state)
 
-
-
-        # share parametes between them
-        # with tf.variable_scope("location_fc", reuse=tf.AUTO_REUSE):
-        #     # with tf.variable_scope("local"):
-        #     #     self.local_fc_output = location_FC(self.local_fc_inputs)
-        #     with tf.variable_scope("air"):
-        #         self.air_location_fc_outputs = []
-        #         for i in range(AIR_STATION_NUM):
-        #             self.air_location_fc_outputs.append(location_FC(self.air_fc_inputs[i]))
-        #     with tf.variable_scope("weather"):
-        #         self.weather_location_fc_outputs = []
-        #         for i in range(GRID_WEAtHER_STATION_NUM):
-        #             self.weather_location_fc_outputs.append(location_FC(self.weather_fc_inputs[i]))
-
         # self.local_high_level_fc_output =  high_level_fc([self.local_fc_output, self.local_air_lstm.output])
         # Do we still need this layer?
         # self.local_high_level_fc_output = high_level_fc(self.local_air_lstm.output)
@@ -432,9 +323,7 @@ class FModel(object):
             self.high_level_fc_outputs = []
             for i in range(self.global_station_num):
                 with tf.variable_scope("higle_level_fc"):
-                    # print(self.weather_lstms[i].output.get_shape())
-                    # print(self.air_lstms[i].output.get_shape())
-                    # print("test")
+
                     air_high_level_fc_inputs = tf.concat([self.weather_lstms[i].output,
                                                           self.air_lstms[i].output], axis=1)
                     self.high_level_fc_outputs.append(high_level_fc(air_high_level_fc_inputs))
@@ -526,15 +415,6 @@ def run_epoch(session, model, batch_count, train_op, output_log, step,
     iters = 0
 
     for batch_idx in range(batch_count):
-
-        # print("In batch " + str(batch_idx))
-        # print(np.shape(np_local_air))
-        # print(np.shape(np_local_weather))
-        # print(np.shape(np_global_air))
-        # print(np.shape(np_global_weather))
-        # print(np.shape(np_global_location))
-        # print(np.shape(targets))
-
         if is_test:
             model.global_test_cnt += 1
             cost, output, losses, summary, ape_loss = session.run(
@@ -551,11 +431,6 @@ def run_epoch(session, model, batch_count, train_op, output_log, step,
             cost = ape_loss
             model.test_writer.add_summary(summary, model.global_test_cnt)
             iters += 1
-            # print("test: ", iters)
-            # print("test cost:", cost)
-            # print(losses)
-            # print(output)
-            # print(targets[batch_idx])
         else:
             model.global_bp_cnt += 1
             cost, _, output, losses, summary = session.run(
@@ -570,11 +445,6 @@ def run_epoch(session, model, batch_count, train_op, output_log, step,
                  })
             model.train_writer.add_summary(summary, model.global_bp_cnt)
             iters += 1
-            # print("train: ", iters)
-            # print("train cost:", cost)
-            # print(losses)
-            # print(output)
-            # print(targets[batch_idx])
 
         total_costs += cost
 
@@ -617,9 +487,6 @@ def main():
             for epoch_idx in range(TOTAL_EPOCH):
                 print("total epoch :", epoch_idx)
 
-
-
-
                 # define BATCH_COUNT in global config here
                 # the locaton batch rely on this too
                 example_data = datasets[0].global_air_lstm_datas[model_idx][0]
@@ -636,12 +503,6 @@ def main():
                 np_global_location = np.swapaxes(np.array(datasets[0].global_locations_datas[model_idx]), 0, 1)
                 np_Y = np.array(datasets[0].Y[model_idx])
 
-                # print(np.shape(np_local_air))
-                # print(np.shape(np_local_weather))
-                # print(np.shape(np_global_air))
-                # print(np.shape(np_global_weather))
-                # print(np.shape(np_global_location))
-                # print(np.shape(np_Y))
 
                 train_model.global_station_num = len(datasets[0].global_air[model_idx])
 
@@ -765,61 +626,12 @@ def predict():
         print(num)
 
 
-
-
-        test_local_weather = datasets[1].test_local_weather[model_idx]
-        test_global_weather = datasets[1].test_global_weather[model_idx]
-        test_global_location = datasets[1].test_global_locations[model_idx]
-        test_local_air = datasets[1].test_local_air[model_idx]
-        test_global_air = datasets[1].test_global_air[model_idx]
-
-
-        future_local_air = testDataByStation[model_idx]
-
         future_global_air = []
 
         for index in indexes[model_idx]:
             future_global_air.append(testDataDict[index])
 
-        #
-        # print(np_local_weather)
-        # print(np_local_air)
-        # print(np_global_weather)
-        # print(np_global_location)
-        # print(np_global_air)
 
-
-        #
-        #
-        # # TODO: need to change them to training scaler of themselves
-        # weather_scaler = StandardScaler()
-        # weather_scaler.fit_transform(test_local_weather)
-        #
-        # local_air_scaler = StandardScaler()
-        # local_air_scaler.fit_transform(test_local_air)
-        #
-        #
-        #
-        #
-        #
-        #
-        #
-        #
-        #
-        #
-        # for i in range(len(datasets[1].test_global_locations[model_idx])):
-        #     global_weather_scaler = StandardScaler()
-        #     global_weather_scaler.fit_transform(datasets[1].test_global_weather[model_idx][i])
-        #     location_scaler = StandardScaler()
-        #     location_scaler.fit_transform(datasets[1].test_global_locations[model_idx][i])
-        #     global_air_scaler = StandardScaler()
-        #     global_air_scaler.fit_transform(test_global_air[model_idx][i])
-        #
-        # print(test_local_weather)
-        # print(test_local_air)
-        # print(test_global_weather[0])
-        # print(test_global_location[0])
-        # print(test_global_air[0])
         with tf.Session() as sess:
             def choose_model(model_idx):
                 acc_filename_dict = {}
@@ -891,5 +703,9 @@ def predict():
     print("error model:", err_model)
     print("model not found:", model_not_found)
 
-# main()
-predict()
+# if we do training or directly predict
+DoTraining = True
+if (DoTraining):
+    main()
+else:
+    predict()

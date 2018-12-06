@@ -74,7 +74,7 @@ def generate_lstm_data(inputs, batch_size = BATCH_SIZE, num_steps = NUM_STEPS, h
 
     take_count = row_count - 1
 
-    # print("take count ", take_count)
+
 
     # Adjust to make Y one hour later than X inherently
 
@@ -90,8 +90,6 @@ def generate_lstm_data(inputs, batch_size = BATCH_SIZE, num_steps = NUM_STEPS, h
         Y = data_Y.iloc[- take_count:]
 
     # # Normalized Data
-    # scaler = StandardScaler()
-    # input_X = scaler.fit_transform(input_X)
     input_X = data_scalar.transform(input_X)
 
     #     Arrange X into sequence list
@@ -142,12 +140,6 @@ def generate_weather_lstm_data(inputs, batch_size = BATCH_SIZE, num_steps = NUM_
 
     take_count = row_count - 1
 
-
-    # inputs = inputs.iloc()
-
-
-    # print("take count ", take_count)
-
     # Adjust to make Y one hour later than X inherently
 
     # The last time data will be one of our predictions, so will not include in our input_X
@@ -191,11 +183,6 @@ def generate_locations_data(inputs, batch_size = BATCH_SIZE, num_steps = NUM_STE
     take_count = row_count - 1
 
 
-    # inputs = inputs.iloc()
-
-
-    # print("take count ", take_count)
-
     # Adjust to make Y one hour later than X inherently
 
     # The last time data will be one of our predictions, so will not include in our input_X
@@ -204,8 +191,6 @@ def generate_locations_data(inputs, batch_size = BATCH_SIZE, num_steps = NUM_STE
     input_X = inputs.iloc[- take_count - 1: - 1]
 
     # # Normalized Data
-    # scaler = StandardScaler()
-    # input_X = scaler.fit_transform(input_X)
     input_X = data_scalar.transform(input_X)
 
     #     Arrange X into sequence list
