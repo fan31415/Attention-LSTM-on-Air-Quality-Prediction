@@ -12,7 +12,7 @@ EARLY_STOP = 30
 TOTAL_EPOCH = 1
 
 # the epoch on first dataset (2017)
-FIRST_EPOCH = 50
+FIRST_EPOCH = 0
 
 # the epoch on second dataset (2018)
 SECOND_EPOCH = 2000

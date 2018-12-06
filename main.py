@@ -560,71 +560,63 @@ def main():
 
                 np_Y = np.array(datasets[1].Y[model_idx])
 
-
-                cv_err_history = np.array([])
+                test_err_history = np.array([])
                 min_loss = float("inf")
+                test_idx = [np.random.randint(0, BATCH_COUNT)]
+                train_idx = [n for n in range(BATCH_COUNT) if n != test_idx[0]]
+                print("train chosen:", train_idx)
+                print("test chosen:", test_idx)
                 for i in range(SECOND_EPOCH):
                     # train/cv generate
                     ####
                     # randomly choose 20% batches to cv, and other 80% batches to train
                     #
                     print("In iteration ", i)
-                    kfold_cnt = 0
-                    cv_errs = 0.0
-                    cv_batches = 0
-                    for train_idx, test_idx in KFold(n_splits=5).split(np_local_air):
-                        np_local_air_train = np_local_air[train_idx]
-                        np_local_weather_train = np_local_weather[train_idx]
-                        np_global_air_train = np_global_air[train_idx]
-                        np_global_weather_train = np_global_weather[train_idx]
-                        np_global_location_train = np_global_location[train_idx]
-                        np_Y_train = np_Y[train_idx]
-                        np_local_air_test = np_local_air[test_idx]
-                        np_local_weather_test = np_local_weather[test_idx]
-                        np_global_air_test = np_global_air[test_idx]
-                        np_global_weather_test = np_global_weather[test_idx]
-                        np_global_location_test = np_global_location[test_idx]
-                        np_Y_test = np_Y[test_idx]
+                    np_local_air_train = np_local_air[train_idx]
+                    np_local_weather_train = np_local_weather[train_idx]
+                    np_global_air_train = np_global_air[train_idx]
+                    np_global_weather_train = np_global_weather[train_idx]
+                    np_global_location_train = np_global_location[train_idx]
+                    np_Y_train = np_Y[train_idx]
+                    np_local_air_test = np_local_air[test_idx]
+                    np_local_weather_test = np_local_weather[test_idx]
+                    np_global_air_test = np_global_air[test_idx]
+                    np_global_weather_test = np_global_weather[test_idx]
+                    np_global_location_test = np_global_location[test_idx]
+                    np_Y_test = np_Y[test_idx]
+                    train_batch_num = len(train_idx)
+                    test_batch_num = len(test_idx)
 
-                        train_batch_num = len(train_idx)
-                        test_batch_num = len(test_idx)
+                    # train
+                    step, total_cost = run_epoch(sess, train_model, train_batch_num, train_model.train_op, True, step,
+                                                 np_local_air_train, np_local_weather_train, np_global_air_train,
+                                                 np_global_weather_train,
+                                                 np_global_location_train, np_Y_train)
 
-                        # train
-                        step, total_cost = run_epoch(sess, train_model, train_batch_num, train_model.train_op, True, step,
-                                                     np_local_air_train, np_local_weather_train, np_global_air_train, np_global_weather_train,
-                                                     np_global_location_train, np_Y_train)
+                    print("Step: ", step)
+                    print("Train Cost of a batch:", total_cost / train_batch_num)
+                    saver.save(sess, './my_model-' + str(model_idx) + ".model", global_step=step)
 
-                        print("Step: ", step)
-                        print("Train Cost of a batch:", total_cost / train_batch_num)
-                        saver.save(sess, './my_model-' + str(model_idx) + ".model", global_step=step)
+                    # test
+                    step, total_cost = run_epoch(sess, train_model, test_batch_num, train_model.train_op, True, step,
+                                                 np_local_air_test, np_local_weather_test, np_global_air_test,
+                                                 np_global_weather_test,
+                                                 np_global_location_test, np_Y_test, is_test=True)
+                    print("Step: ", step)
+                    print("Test Error of a batch:", total_cost / test_batch_num)
 
-                        # cv test
-                        step, total_cost = run_epoch(sess, train_model, test_batch_num, train_model.train_op, True, step,
-                                                     np_local_air_test, np_local_weather_test, np_global_air_test, np_global_weather_test,
-                                                     np_global_location_test, np_Y_test, is_test=True)
-                        print("Step: ", step)
-                        print("CV[%d] Error of a batch:" % kfold_cnt, total_cost / test_batch_num)
-                        cv_errs += total_cost
-                        cv_batches += test_batch_num
-                        kfold_cnt += 1
-                    cv_avg_err = cv_errs/cv_batches
-
-                    print("cur cv err:", cv_avg_err)
+                    test_err = total_cost / test_batch_num
                     print("cur min:", min_loss)
-                    if len(cv_err_history) > EARLY_STOP:
-                        if cv_avg_err >= min_loss:
+                    if len(test_err_history) >= EARLY_STOP:
+                        if test_err >= min_loss:
                             print("Early Stop. Because loss not decrease for %d epoches" % EARLY_STOP)
                             break
                         else:
-                            min_loss = cv_avg_err
-                            cv_err_history = np.array([])
+                            min_loss = test_err
+                            test_err_history = np.array([])
 
-                    cv_err_history = np.append(cv_err_history, cv_avg_err)
-                    print(cv_err_history)
-
-
-
-
+                    test_err_history = np.append(test_err_history, test_err)
+                    print(test_err_history)
 
 
 def predict():
