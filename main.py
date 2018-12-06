@@ -384,6 +384,9 @@ class FModel(object):
         for i in range(len(params)):
             print(params[i].name)
             print("\n")
+        print("\n\n\n")
+        reg_params = tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES)
+        print(reg_params)
         if self.sess is not None:
            self.train_writer = tf.summary.FileWriter('./logs/train/', sess.graph)
            self.test_writer = tf.summary.FileWriter('./logs/test')
