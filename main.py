@@ -615,12 +615,13 @@ def main():
 
                     test_err = total_cost / test_batch_num
                     print("cur min:", min_loss)
+                    if test_err < min_loss:
+                        saver.save(sess, './my_model-' + str(model_idx) + "-acc-" + str(test_err), global_step=step)
                     if len(test_err_history) >= EARLY_STOP:
                         if test_err >= min_loss:
                             print("Early Stop. Because loss not decrease for %d epoches" % EARLY_STOP)
                             break
                         else:
-                            saver.save(sess, './my_model-' + str(model_idx) + "-acc-" + str(test_err), global_step=step)
                             min_loss = test_err
                             test_err_history = np.array([])
 
