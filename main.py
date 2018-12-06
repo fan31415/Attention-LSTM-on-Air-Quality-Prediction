@@ -435,8 +435,8 @@ def run_epoch(session, model, batch_count, train_op, output_log, step,
                  })
             model.test_writer.add_summary(summary, model.global_test_cnt)
             iters += 1
-            print("test: ", iters)
-            print("test cost:", cost)
+            # print("test: ", iters)
+            # print("test cost:", cost)
             # print(losses)
             # print(output)
             # print(targets[batch_idx])
@@ -454,8 +454,8 @@ def run_epoch(session, model, batch_count, train_op, output_log, step,
                  })
             model.train_writer.add_summary(summary, model.global_bp_cnt)
             iters += 1
-            print("train: ", iters)
-            print("train cost:", cost)
+            # print("train: ", iters)
+            # print("train cost:", cost)
             # print(losses)
             # print(output)
             # print(targets[batch_idx])
