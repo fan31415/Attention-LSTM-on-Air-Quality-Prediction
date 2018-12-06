@@ -6,7 +6,7 @@ USE_GPU = True
 
 LEARNING_RATE = 0.005
 
-EARLY_STOP = 30
+EARLY_STOP = 200
 
 # the epoch for all local station training
 TOTAL_EPOCH = 1
@@ -15,7 +15,7 @@ TOTAL_EPOCH = 1
 FIRST_EPOCH = 0
 
 # the epoch on second dataset (2018)
-SECOND_EPOCH = 2000
+SECOND_EPOCH = 200
 
 BATCH_SIZE = 48 # The number of records within a batch
 
