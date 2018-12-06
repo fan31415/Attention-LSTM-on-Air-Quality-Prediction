@@ -607,12 +607,9 @@ def main():
 
         with tf.Session() as sess:
 
-
-            saver = tf.train.Saver()
+            saver = tf.train.Saver(max_to_keep=100)
 
             sess.run(tf.global_variables_initializer())
-
-
 
             step = 0
 
@@ -722,13 +719,14 @@ def main():
                     test_err = total_cost / test_batch_num
                     print("cur min:", min_loss)
                     if test_err < min_loss:
+                        min_loss = test_err
                         saver.save(sess, './my_model-' + str(model_idx) + "-acc-" + str(test_err), global_step=step)
+
                     if len(test_err_history) >= EARLY_STOP:
                         if test_err >= min_loss:
                             print("Early Stop. Because loss not decrease for %d epoches" % EARLY_STOP)
                             break
                         else:
-                            min_loss = test_err
                             test_err_history = np.array([])
 
                     test_err_history = np.append(test_err_history, test_err)
@@ -747,7 +745,7 @@ def predict():
         BATCH_COUNT = len(example_data)
         print("BATCH_C ", BATCH_COUNT)
 
-        saver = tf.train.Saver()
+        saver = tf.train.Saver(max_to_keep=100)
 
         np_local_air = np.array(datasets[1].local_air_lstm_datas[model_idx])
         np_local_weather = np.array(datasets[1].local_weather_lstm_datas[model_idx])
