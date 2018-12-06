@@ -367,10 +367,11 @@ class FModel(object):
 
         # loss = tf.losses.mean_squared_error(labels=self.targets, predictions=self.results)
 
-        self.losses = tf.square(tf.subtract(self.targets, self.results))
+        self.mse_losses = tf.square(tf.subtract(self.targets, self.results))
 
-        self.losses = tf.div(tf.abs(tf.subtract(self.targets, self.results)),
+        self.msape_losses = tf.div(tf.abs(tf.subtract(self.targets, self.results)),
                              tf.div(tf.add(self.targets, self.results), 2))
+        self.losses = self.mse_losses
 
         beta = 0.2
         params = tf.trainable_variables()
@@ -388,9 +389,12 @@ class FModel(object):
         # average cost
         self.cost_pure = tf.div(tf.reduce_sum(self.losses), BATCH_SIZE)
         self.cost = self.cost_pure
+
+        self.show_loss = tf.div(tf.reduce_sum(self.msape_losses), BATCH_SIZE)
         # self.cost = tf.div(tf.reduce_sum(self.losses) + beta*reg_loss, BATCH_SIZE)
         # tf.summary.scalar('train pure cost[%s]' % self.model_id, self.cost_pure)
         tf.summary.scalar('train cost with reg[%s]' % self.model_id, self.cost)
+        tf.summary.scalar('show cost (msape)[%s]' % self.model_id, self.msape_losses)
 
 
         # self.train_op = tf.contrib.layers.optimize_loss(
@@ -427,8 +431,8 @@ def run_epoch(session, model, batch_count, train_op, output_log, step,
 
         if is_test:
             model.global_test_cnt += 1
-            cost, output, losses, summary = session.run(
-                [model.cost, model.results, model.losses, model.merged_summary],
+            cost, output, losses, summary, ape_loss = session.run(
+                [model.cost, model.results, model.losses, model.merged_summary, model.show_loss],
                 {model.local_air_lstm_inputs: np_local_air[batch_idx],
                  # the input below is all list of batch data
                  model.local_weather_lstm_inputs: np_local_weather[batch_idx],
@@ -437,6 +441,7 @@ def run_epoch(session, model, batch_count, train_op, output_log, step,
                  model.attention_chosen_inputs: np_global_location[batch_idx],
                  model.targets: targets[batch_idx],
                  })
+            print("ape:", ape_loss)
             model.test_writer.add_summary(summary, model.global_test_cnt)
             iters += 1
             # print("test: ", iters)
@@ -599,7 +604,6 @@ def main():
 
                     print("Step: ", step)
                     print("Train Cost of a batch:", total_cost / train_batch_num)
-                    saver.save(sess, './my_model-' + str(model_idx) + ".model", global_step=step)
 
                     # test
                     step, total_cost = run_epoch(sess, train_model, test_batch_num, train_model.train_op, True, step,
@@ -616,6 +620,7 @@ def main():
                             print("Early Stop. Because loss not decrease for %d epoches" % EARLY_STOP)
                             break
                         else:
+                            saver.save(sess, './my_model-' + str(model_idx) + "-acc-" + str(test_err), global_step=step)
                             min_loss = test_err
                             test_err_history = np.array([])
 

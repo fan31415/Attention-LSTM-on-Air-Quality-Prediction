@@ -23,11 +23,13 @@ def high_level_fc(inputs, hidden_size = HIGH_LEVEL_FC_HIDDEN_SIZE):
         outputs = tf.contrib.layers.fully_connected(layer1, hidden_size)
     return outputs
 
+
 # only one fusion model, no need to share parameters
 def fusion_fc_layer(inputs, hidden_size = FUSION_LAYER_HIDDEN_SIZE):
     with tf.variable_scope("fusion_layer_fc"):
         outputs = tf.contrib.layers.fully_connected(inputs, hidden_size)
     return outputs
+
 
 # inputs shape is [batch_size, hidden_size]
 # output shape is [batch_size, label_size]

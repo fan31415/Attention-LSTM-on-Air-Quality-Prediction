@@ -4,9 +4,9 @@ DATA_DIR = "./data/"
 
 USE_GPU = True
 
-LEARNING_RATE = 0.005
+LEARNING_RATE = 0.0005
 
-EARLY_STOP = 200
+EARLY_STOP = 400
 
 # the epoch for all local station training
 TOTAL_EPOCH = 1
@@ -15,7 +15,7 @@ TOTAL_EPOCH = 1
 FIRST_EPOCH = 0
 
 # the epoch on second dataset (2018)
-SECOND_EPOCH = 200
+SECOND_EPOCH = 400
 
 BATCH_SIZE = 48 # The number of records within a batch
 
@@ -52,8 +52,6 @@ ATTENTION_JUDGE_FEATURE_NUM = 6
 # LOCATION_FEATURE_NUM = 2
 
 ATTENTION_HIDDEN_SIZE = 128
-
-
 
 PREDICT_LAYER_HIDDEN_SIZE = 100
 
