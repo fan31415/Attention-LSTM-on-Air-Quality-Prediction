@@ -1,5 +1,4 @@
-# Labels = ["PM2.5", "PM10", "O3"]
-Labels = ["PM2.5"]
+Labels = ["PM2.5", "PM10", "O3"]
 
 DATA_DIR = "./data/"
 
@@ -25,7 +24,7 @@ NUM_STEPS = 48 # the cut off steps for one time back-prop process
 
 # BATCH_COUNT = 1
 
-AIR_FEATURE_NUM = 1 # 3
+AIR_FEATURE_NUM = 3
 
 LOCAL_WEATHER_FEATURE_NUM = 4
 

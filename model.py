@@ -41,7 +41,6 @@ def predict_layer(inputs, hidden_size = PREDICT_LAYER_HIDDEN_SIZE):
         # outputs = tf.tensordot(inputs, weight, [[1], [0]])
         outputs = tf.matmul(inputs, weight)
         outputs = tf.add(outputs, bias)
-        outputs = tf.nn.relu(outputs)
     return outputs
 
 
