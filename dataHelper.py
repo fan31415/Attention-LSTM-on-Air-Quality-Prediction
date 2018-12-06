@@ -9,15 +9,16 @@ import os
 
 from config import *
 
-def load_data():
-    up_dir = DATA_DIR
+def load_data(dir = DATA_DIR):
+    up_dir = dir
     files = os.listdir(up_dir)
+    files.sort()
     data = []
     for file in files:
         path = os.path.join(up_dir, file)
         with open(path, "rb") as f:
             data.append(pickle.load(f))
-    return data
+    return data, files
 
 # Notice this will also return actuall count
 def getBatchCount(total_count, batch_size = BATCH_SIZE):

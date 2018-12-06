@@ -24,8 +24,15 @@ from config import *
 # error_log = open("myerror.log", "w")
 # sys.stderr = error_log
 
-trainDataByStation = load_data()
+trainDataByStation, _ = load_data()
 
+testDataByStation, files = load_data(dir = TEST_DATA_DIR)
+testDataDict = {}
+
+for idx, file in enumerate(files):
+    name = file.split('.')[0].split('_')[2:4]
+    name = "_".join(name)
+    testDataDict[name] = testDataByStation[idx]
 
 # do this due to data generalization not consist here
 # for i in range(AIR_STATION_NUM):
@@ -60,7 +67,20 @@ class Dataset:
     global_locations_datas = None
     Y = None
 
+    test_local_weather = None
+    test_global_weather = None
+    test_global_locations = None
+    test_local_air = None
+    test_global_air = None
+    test_append_local_weather = None
+    test_append_global_weather = None
+    test_append_location = None
+
+
 dataset = Dataset()
+
+
+
 
 
 
@@ -118,23 +138,78 @@ for staion_train_data in trainDataByStation:
 
     global_locations.append(staion_train_data[9])
 
-dataset.local_air = local_air
-dataset.local_weather = local_weather
-dataset.global_weather = global_weather
-dataset.global_air = global_air
-dataset.global_locations = global_locations
 
+
+dataset.local_air = deepcopy(local_air)
+dataset.local_weather = deepcopy(local_weather)
+dataset.global_weather = deepcopy(global_weather)
+dataset.global_air = deepcopy(global_air)
+dataset.global_locations = deepcopy(global_locations)
+
+
+
+
+
+# For predict
+dataset.test_local_weather = []
+dataset.test_global_locations = []
+dataset.test_global_weather = []
+dataset.test_local_air = []
+dataset.test_global_air = []
+dataset.test_append_global_weather = []
+dataset.test_append_local_weather = []
+dataset.test_append_location = []
 
 # Workround: do this due to data generalization not consist here
 for i in range(AIR_STATION_NUM):
+    dataset.test_local_weather.append(local_weather[i]["2018-04-29 01:00:00":"2018-05-01 00:00:00"])
+
+    dataset.test_local_air.append(local_air[i]["2018-04-29 00:00:00":"2018-04-30 23:00:00"])
+
+    dataset.test_append_local_weather.append(local_weather[i]["2018-05-01 01:00:00":"2018-05-02 23:00:00"])
+    dataset.test_append_local_weather[i] = dataset.test_append_local_weather[i] \
+        .append(local_weather[i].iloc[-1])
+
+
     dataset.local_air[i] = dataset.local_air[i]["2018-03-01 04:00:00":"2018-04-30 23:00:00"]
     dataset.local_weather[i] = dataset.local_weather[i]["2018-03-01 05:00:00":"2018-05-01 00:00:00"]
-    for j in range(len(dataset.global_weather[i])):
+
+    num = len(dataset.global_weather[i])
+    dataset.test_global_weather.append([])
+    dataset.test_global_locations.append([])
+    dataset.test_global_air.append([])
+
+    dataset.test_append_global_weather.append([])
+    dataset.test_append_location.append([])
+
+
+
+    for j in range(num):
         dataset.global_air[i][j] = dataset.global_air[i][j]["2018-03-01 04:00:00":"2018-04-30 23:00:00"]
         dataset.global_weather[i][j] = dataset.global_weather[i][j]["2018-03-01 04:00:00":"2018-04-30 23:00:00"]
         dataset.global_locations[i][j] = dataset.global_locations[i][j]["2018-03-01 04:00:00":"2018-04-30 23:00:00"]
 
+        dataset.test_global_weather[i].append(global_weather[i][j]["2018-04-29 00:00:00":"2018-04-30 23:00:00"])
+        dataset.test_global_locations[i].append(global_locations[i][j]["2018-04-29 00:00:00":"2018-04-30 23:00:00"])
+        dataset.test_global_air[i].append(global_air[i][j]["2018-04-29 00:00:00":"2018-04-30 23:00:00"])
+
+        dataset.test_append_location[i].append(global_locations[i][j]["2018-05-01 00:00:00":"2018-05-02 23:00:00"])
+        dataset.test_append_global_weather[i].append(global_weather[i][j]["2018-05-01 00:00:00":"2018-05-02 23:00:00"])
+
+
+
+
+
+
+
 datasets.append(deepcopy(dataset))
+
+
+indexes = []
+
+for i in range(AIR_STATION_NUM):
+    num = len(dataset.global_weather[i])
+    indexes.append(list(datasets[1].global_weather[i].index))
 
 #
 # print(len(datasets[0].global_locations[0]))
@@ -151,40 +226,77 @@ datasets.append(deepcopy(dataset))
 #         scaler = StandardScaler()
 #         dataset.local_weather[idx] = scaler.fit_transform(dataset.local_weather[idx])
 
+def deal_dataset(origin_dataset):
+    dataset = deepcopy(origin_dataset)
+    dataset.local_air_lstm_datas = [None] * AIR_STATION_NUM
+    dataset.Y = [None] * AIR_STATION_NUM
+    for i in range(AIR_STATION_NUM):
+        # For one whole training, we only pick one data
+        dataset.local_air_lstm_datas[i], dataset.Y[i] = generate_lstm_data(dataset.local_air[i],
+                                                                                       hasLabel=True)
+
+    dataset.local_weather_lstm_datas = [None] * AIR_STATION_NUM
+    for i in range(AIR_STATION_NUM):
+        dataset.local_weather_lstm_datas[i] = generate_lstm_data(dataset.local_weather[i], stop_before=0)
+
+    dataset.global_air_lstm_datas = [None] * AIR_STATION_NUM
+    for i in range(AIR_STATION_NUM):
+        dataset.global_air_lstm_datas[i] = []
+        num = len(dataset.global_air[i])
+        for j in range(num):
+            dataset.global_air_lstm_datas[i].append(generate_lstm_data(dataset.global_air[i][j]))
+
+    dataset.global_weather_lstm_datas = [None] * AIR_STATION_NUM
+    for i in range(AIR_STATION_NUM):
+        dataset.global_weather_lstm_datas[i] = []
+        num = len(dataset.global_weather[i])
+        for j in range(num):
+            dataset.global_weather_lstm_datas[i].append(
+                generate_lstm_data(dataset.global_weather[i][j], stop_before=0))
+
+    dataset.global_locations_datas = [None] * AIR_STATION_NUM
+    for i in range(AIR_STATION_NUM):
+        dataset.global_locations_datas[i] = []
+        num = len(dataset.global_weather[i])
+        for j in range(num):
+            dataset.global_locations_datas[i].append(generate_locations_data(dataset.global_locations[i][j]))
+
+    return dataset
 
 # generate local air lstm data
 for idx, dataset in enumerate(datasets):
-    datasets[idx].local_air_lstm_datas = [None] * AIR_STATION_NUM
-    datasets[idx].Y = [None] * AIR_STATION_NUM
-    for i in range(AIR_STATION_NUM):
-        # For one whole training, we only pick one data
-        datasets[idx].local_air_lstm_datas[i], datasets[idx].Y[i] = generate_lstm_data(dataset.local_air[i], hasLabel=True)
-
-    datasets[idx].local_weather_lstm_datas = [None] * AIR_STATION_NUM
-    for i in range(AIR_STATION_NUM):
-        datasets[idx].local_weather_lstm_datas[i] = generate_lstm_data(dataset.local_weather[i], stop_before=0)
-
-
-    datasets[idx].global_air_lstm_datas = [None] * AIR_STATION_NUM
-    for i in range(AIR_STATION_NUM):
-        datasets[idx].global_air_lstm_datas[i] = []
-        num = len(dataset.global_air[i])
-        for j in range(num):
-            datasets[idx].global_air_lstm_datas[i].append(generate_lstm_data(dataset.global_air[i][j]))
-
-    datasets[idx].global_weather_lstm_datas = [None] * AIR_STATION_NUM
-    for i in range(AIR_STATION_NUM):
-        datasets[idx].global_weather_lstm_datas[i]= []
-        num = len(dataset.global_weather[i])
-        for j in range(num):
-            datasets[idx].global_weather_lstm_datas[i].append(generate_lstm_data(dataset.global_weather[i][j], stop_before=0))
-
-    datasets[idx].global_locations_datas = [None] * AIR_STATION_NUM
-    for i in range(AIR_STATION_NUM):
-        datasets[idx].global_locations_datas[i] = []
-        num = len(dataset.global_weather[i])
-        for j in range(num):
-            datasets[idx].global_locations_datas[i].append(generate_locations_data(dataset.global_locations[i][j]))
+    datasets[idx] = deal_dataset(dataset)
+    # datasets[idx].local_air_lstm_datas = [None] * AIR_STATION_NUM
+    # datasets[idx].Y = [None] * AIR_STATION_NUM
+    # for i in range(AIR_STATION_NUM):
+    #     # For one whole training, we only pick one data
+    #     datasets[idx].local_air_lstm_datas[i], datasets[idx].Y[i] = generate_lstm_data(dataset.local_air[i], hasLabel=True)
+    #
+    # datasets[idx].local_weather_lstm_datas = [None] * AIR_STATION_NUM
+    # for i in range(AIR_STATION_NUM):
+    #     datasets[idx].local_weather_lstm_datas[i] = generate_lstm_data(dataset.local_weather[i], stop_before=0)
+    #
+    #
+    # datasets[idx].global_air_lstm_datas = [None] * AIR_STATION_NUM
+    # for i in range(AIR_STATION_NUM):
+    #     datasets[idx].global_air_lstm_datas[i] = []
+    #     num = len(dataset.global_air[i])
+    #     for j in range(num):
+    #         datasets[idx].global_air_lstm_datas[i].append(generate_lstm_data(dataset.global_air[i][j]))
+    #
+    # datasets[idx].global_weather_lstm_datas = [None] * AIR_STATION_NUM
+    # for i in range(AIR_STATION_NUM):
+    #     datasets[idx].global_weather_lstm_datas[i]= []
+    #     num = len(dataset.global_weather[i])
+    #     for j in range(num):
+    #         datasets[idx].global_weather_lstm_datas[i].append(generate_lstm_data(dataset.global_weather[i][j], stop_before=0))
+    #
+    # datasets[idx].global_locations_datas = [None] * AIR_STATION_NUM
+    # for i in range(AIR_STATION_NUM):
+    #     datasets[idx].global_locations_datas[i] = []
+    #     num = len(dataset.global_weather[i])
+    #     for j in range(num):
+    #         datasets[idx].global_locations_datas[i].append(generate_locations_data(dataset.global_locations[i][j]))
 
 # dataset_idx : [current local station number, global air station num around current local station, batch count]
 # print(datasets[0].global_air_lstm_datas[0][0][0])
@@ -527,19 +639,135 @@ def main():
 
 
 
-                saver.save(sess, './my_model-' + str(model_idx) + ".model", global_step=step)
+                saver.save(sess, './my_model-' + str(model_idx) + ".model")
 
 
 def predict():
-    with tf.Session() as sess:
-        saver = tf.train.Saver()
-        model_idx = 0
-        global_station_number = len(datasets[0].global_air[model_idx])
+    for model_idx in [8]:
+        dataset = datasets[1]
+        global_station_number = len(datasets[1].global_air[model_idx])
         eval_model = FModel(global_station_number, False)
-        saver.restore("my_model-0.model-2.data-00000-of-00001")
-        sess.run()
+        model = eval_model
+        train_op = tf.no_op()
 
-    pass
+        example_data = datasets[1].global_air_lstm_datas[model_idx][0]
+        BATCH_COUNT = len(example_data)
+        print("BATCH_C ", BATCH_COUNT)
+
+        saver = tf.train.Saver()
+
+        np_local_air = np.array(datasets[1].local_air_lstm_datas[model_idx])
+        np_local_weather = np.array(datasets[1].local_weather_lstm_datas[model_idx])
+        # swap axes so that we can first choose data by trained local station, then get data by bacth_idx
+        np_global_air = np.swapaxes(np.array(datasets[1].global_air_lstm_datas[model_idx]), 0, 1)
+        np_global_weather = np.swapaxes(np.array(datasets[1].global_weather_lstm_datas[model_idx]), 0, 1)
+        np_global_location = np.swapaxes(np.array(datasets[1].global_locations_datas[model_idx]), 0, 1)
+        np_Y = np.array(datasets[1].Y[model_idx])
+
+        num = len(np_global_air[0])
+        print(num)
 
 
-main()
+
+
+        test_local_weather = datasets[1].test_local_weather[model_idx]
+        test_global_weather = datasets[1].test_global_weather[model_idx]
+        test_global_location = datasets[1].test_global_locations[model_idx]
+        test_local_air = datasets[1].test_local_air[model_idx]
+        test_global_air = datasets[1].test_global_air[model_idx]
+
+
+        future_local_air = testDataByStation[model_idx]
+
+        future_global_air = []
+
+        for index in indexes[model_idx]:
+            future_global_air.append(testDataDict[index])
+
+        #
+        # print(np_local_weather)
+        # print(np_local_air)
+        # print(np_global_weather)
+        # print(np_global_location)
+        # print(np_global_air)
+
+
+        #
+        #
+        # # TODO: need to change them to training scaler of themselves
+        # weather_scaler = StandardScaler()
+        # weather_scaler.fit_transform(test_local_weather)
+        #
+        # local_air_scaler = StandardScaler()
+        # local_air_scaler.fit_transform(test_local_air)
+        #
+        #
+        #
+        #
+        #
+        #
+        #
+        #
+        #
+        #
+        # for i in range(len(datasets[1].test_global_locations[model_idx])):
+        #     global_weather_scaler = StandardScaler()
+        #     global_weather_scaler.fit_transform(datasets[1].test_global_weather[model_idx][i])
+        #     location_scaler = StandardScaler()
+        #     location_scaler.fit_transform(datasets[1].test_global_locations[model_idx][i])
+        #     global_air_scaler = StandardScaler()
+        #     global_air_scaler.fit_transform(test_global_air[model_idx][i])
+        #
+        # print(test_local_weather)
+        # print(test_local_air)
+        # print(test_global_weather[0])
+        # print(test_global_location[0])
+        # print(test_global_air[0])
+
+        with tf.Session() as sess:
+            saver.restore(sess, "my_model-0.model-1131")
+            batch_idx = BATCH_COUNT-1
+            # sess.run(eval_model.results)
+
+            for i in range(48):
+                cost, _, output, losses = sess.run(
+                    [model.cost, train_op, model.results, model.losses],
+                    {model.local_air_lstm_inputs: np_local_air[batch_idx],
+                     # the input below is all list of batch data
+                     model.local_weather_lstm_inputs: np_local_weather[batch_idx],
+                     model.air_lstm_inputs: np_global_air[batch_idx],
+                     model.weather_lstm_inputs: np_global_weather[batch_idx],
+                     model.attention_chosen_inputs: np_global_location[batch_idx],
+                     model.targets: np_Y[batch_idx],
+                     })
+
+                result = output[-1]
+
+                dataset.local_air[model_idx].loc[len(dataset.local_air[model_idx])] = result
+
+                dataset.local_weather[model_idx].loc[len(dataset.local_weather[model_idx])] = dataset.test_append_local_weather[model_idx].iloc[i]
+
+
+                for j in range(num):
+                    dataset.global_weather[model_idx][j].loc[len(dataset.global_weather[model_idx][j])] = dataset.test_append_global_weather[model_idx][j].iloc[i]
+                    dataset.global_locations[model_idx][j].loc[len(dataset.global_locations[model_idx][j])] = dataset.test_append_location[model_idx][j].iloc[i]
+                    dataset.global_air[model_idx][j].loc[len(dataset.global_air[model_idx][j])] = future_global_air[j].iloc[i]
+
+
+                dataset = deal_dataset(dataset)
+
+                np_local_air = np.array(dataset.local_air_lstm_datas[model_idx])
+                np_local_weather = np.array(dataset.local_weather_lstm_datas[model_idx])
+                # swap axes so that we can first choose data by trained local station, then get data by bacth_idx
+                np_global_air = np.swapaxes(np.array(dataset.global_air_lstm_datas[model_idx]), 0, 1)
+                np_global_weather = np.swapaxes(np.array(dataset.global_weather_lstm_datas[model_idx]), 0, 1)
+                np_global_location = np.swapaxes(np.array(dataset.global_locations_datas[model_idx]), 0, 1)
+                np_Y = np.array(dataset.Y[model_idx])
+
+
+                print(result)
+            # print(output)
+
+
+# main()
+predict()

@@ -2,6 +2,8 @@ Labels = ["PM2.5", "PM10", "O3"]
 
 DATA_DIR = "/Users/fanyijie/Downloads/5002Data/datapack_5002/"
 
+TEST_DATA_DIR = "/Users/fanyijie/Downloads/5002Data/real_air_5002/"
+
 USE_GPU = False
 
 LEARNING_RATE = 0.005
