@@ -3,6 +3,7 @@ Labels = ["PM2.5", "PM10", "O3"]
 DATA_DIR = "./data/"
 
 USE_GPU = True
+TEST_DATA_DIR = "./test_data"
 
 LEARNING_RATE = 0.001
 

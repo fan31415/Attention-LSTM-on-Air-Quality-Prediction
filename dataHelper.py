@@ -9,9 +9,10 @@ import os
 from config import *
 
 
-def load_data():
-    up_dir = DATA_DIR
+def load_data(dir = DATA_DIR):
+    up_dir = dir
     files = os.listdir(up_dir)
+    files.sort()
     data = []
     for file in files:
         if "pkl" not in file:
@@ -19,7 +20,7 @@ def load_data():
         path = os.path.join(up_dir, file)
         with open(path, "rb") as f:
             data.append(pickle.load(f))
-    return data
+    return data, files
 
 
 # Notice this will also return actuall count
@@ -54,7 +55,7 @@ def generate_location_batch_data(inputs, batch_count, sequence_length):
 
 
 # inputs will be shape [time_count, feature_number]
-def generate_lstm_data(inputs, batch_size = BATCH_SIZE, num_steps = NUM_STEPS, hasLabel = False, stop_before = 0, data_scalar=StandardScaler()):
+def generate_lstm_data(inputs, batch_size = BATCH_SIZE, num_steps = NUM_STEPS, hasLabel = False, stop_before = 0, data_scalar=None):
     # params:
     # stop_before: stop sequence before stop_before days before sequence end
     columns = list(inputs)
