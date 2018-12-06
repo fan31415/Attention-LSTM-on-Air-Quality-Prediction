@@ -609,9 +609,11 @@ def main():
                         kfold_cnt += 1
                     cv_avg_err = cv_errs/cv_batches
 
+                    print("cur cv err:", cv_avg_err)
+                    print("cur min:", min_loss)
                     if len(cv_err_history) > EARLY_STOP:
                         if cv_avg_err >= min_loss:
-                            print("Early Stop. Because loss not decrease for 50 epoches")
+                            print("Early Stop. Because loss not decrease for %d epoches" % EARLY_STOP)
                             break
                         else:
                             min_loss = cv_avg_err
