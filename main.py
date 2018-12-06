@@ -390,11 +390,11 @@ class FModel(object):
         self.cost_pure = tf.div(tf.reduce_sum(self.losses), BATCH_SIZE)
         self.cost = self.cost_pure
 
-        self.show_loss = tf.div(tf.reduce_sum(self.msape_losses), BATCH_SIZE)
+        self.show_loss = tf.div(tf.reduce_sum(self.msape_losses), (BATCH_SIZE*len(Labels)))
         # self.cost = tf.div(tf.reduce_sum(self.losses) + beta*reg_loss, BATCH_SIZE)
         # tf.summary.scalar('train pure cost[%s]' % self.model_id, self.cost_pure)
         tf.summary.scalar('train cost with reg[%s]' % self.model_id, self.cost)
-        tf.summary.scalar('show cost (msape)[%s]' % self.model_id, self.msape_losses)
+        tf.summary.scalar('show cost (msape)[%s]' % self.model_id, self.show_loss)
 
 
         # self.train_op = tf.contrib.layers.optimize_loss(
