@@ -5,6 +5,7 @@ from dataHelper import PreProcessor
 import pickle
 import os
 import sys
+from sklearn.model_selection import KFold
 
 from copy import deepcopy
 
@@ -238,6 +239,7 @@ for idx, dataset in enumerate(datasets):
 class FModel(object):
     def __init__(self, global_station_num, is_training, sess=None, model_id=-1):
         self.global_bp_cnt = 0  # a counter to record the times running BackPropagation
+        self.global_test_cnt = 0
         self.sess = sess
         self.global_station_num = global_station_num
         self.batch_size = BATCH_SIZE
@@ -372,7 +374,8 @@ class FModel(object):
         params_need_reg = []
         reg_loss = None
         for i in range(len(params)):
-            if "weigh" in params[i].name:
+            # no reg in predict layer, because labels are not scaled
+            if "weigh" in params[i].name and "predict_layer" not in params[i].name:
                 params_need_reg.append(params[i])
                 print(params[i].name)
                 if reg_loss is None:
@@ -403,17 +406,9 @@ class FModel(object):
 
 def run_epoch(session, model, batch_count, train_op, output_log, step,
               np_local_air, np_local_weather, np_global_air, np_global_weather,
-              np_global_location, targets, big_iter=0):
+              np_global_location, targets, big_iter=0, is_test=False):
     total_costs = 0.0
     iters = 0
-
-    # global states, each is different air state
-    # air_states = [session.run(model.air_lstms[0].initial_state)] * AIR_STATION_NUM
-    # weather_states = [session.run(model.weather_lstms[0].initial_state)] * AIR_STATION_NUM
-    #
-    # local_weather_state = session.run(model.local_weather_lstm.initial_state)
-    #
-    # local_air_state = session.run(model.local_air_lstm.initial_state)
 
     for batch_idx in range(batch_count):
 
@@ -425,50 +420,50 @@ def run_epoch(session, model, batch_count, train_op, output_log, step,
         # print(np.shape(np_global_location))
         # print(np.shape(targets))
 
-        #
-        # cost, _, output, losses, local_weather_state, local_air_state, weather_states, air_states = session.run([model.cost, train_op, model.results, model.losses,
-        #                                        model.local_weather_lstm.state, model.local_air_lstm.state,
-        #                                                               model.weather_lstms_states, model.air_lstms_states],
-        #                                {model.local_air_lstm_inputs: np_local_air[batch_idx],
-        #                                 # the input below is all list of batch data
-        #                                 model.local_weather_lstm_inputs: np_local_weather[batch_idx],
-        #                                 model.air_lstm_inputs: np_global_air[batch_idx],
-        #                                 model.weather_lstm_inputs: np_global_weather[batch_idx],
-        #                                 model.attention_chosen_inputs: np_global_location[batch_idx],
-        #                                 model.targets: targets[batch_idx],
-        #                                 model.local_weather_lstm.initial_state: local_weather_state,
-        #                                 model.local_air_lstm.initial_state: local_air_state,
-        #                                 model.weather_lstms_states: weather_states,
-        #                                 model.air_lstms_states: air_states})
 
-        model.global_bp_cnt += 1
-
-        cost, _, output, losses, summary = session.run(
-            [model.cost, train_op, model.results, model.losses, model.merged_summary],
-            {model.local_air_lstm_inputs: np_local_air[batch_idx],
-             # the input below is all list of batch data
-             model.local_weather_lstm_inputs: np_local_weather[batch_idx],
-             model.air_lstm_inputs: np_global_air[batch_idx],
-             model.weather_lstm_inputs: np_global_weather[batch_idx],
-             model.attention_chosen_inputs: np_global_location[batch_idx],
-             model.targets: targets[batch_idx],
-             })
-        #         cost, _ = session.run([model.cost, train_op], {model.targets: y[0][batch_idx],
-        #
-        #                                                model.temp_targets: train_Y})
-        model.train_writer.add_summary(summary, model.global_bp_cnt)
-        iters += 1
-        print(iters)
-        print(cost)
-        # print(losses)
-        # print(output)
-        # print(targets[batch_idx])
+        if is_test:
+            model.global_test_cnt += 1
+            cost, output, losses, summary = session.run(
+                [model.cost, model.results, model.losses, model.merged_summary],
+                {model.local_air_lstm_inputs: np_local_air[batch_idx],
+                 # the input below is all list of batch data
+                 model.local_weather_lstm_inputs: np_local_weather[batch_idx],
+                 model.air_lstm_inputs: np_global_air[batch_idx],
+                 model.weather_lstm_inputs: np_global_weather[batch_idx],
+                 model.attention_chosen_inputs: np_global_location[batch_idx],
+                 model.targets: targets[batch_idx],
+                 })
+            model.test_writer.add_summary(summary, model.global_test_cnt)
+            iters += 1
+            print("test: ", iters)
+            print("test cost:", cost)
+            # print(losses)
+            # print(output)
+            # print(targets[batch_idx])
+        else:
+            model.global_bp_cnt += 1
+            cost, _, output, losses, summary = session.run(
+                [model.cost, train_op, model.results, model.losses, model.merged_summary],
+                {model.local_air_lstm_inputs: np_local_air[batch_idx],
+                 # the input below is all list of batch data
+                 model.local_weather_lstm_inputs: np_local_weather[batch_idx],
+                 model.air_lstm_inputs: np_global_air[batch_idx],
+                 model.weather_lstm_inputs: np_global_weather[batch_idx],
+                 model.attention_chosen_inputs: np_global_location[batch_idx],
+                 model.targets: targets[batch_idx],
+                 })
+            model.train_writer.add_summary(summary, model.global_bp_cnt)
+            iters += 1
+            print("train: ", iters)
+            print("train cost:", cost)
+            # print(losses)
+            # print(output)
+            # print(targets[batch_idx])
 
         total_costs += cost
 
     step += 1
     return step, total_costs
-
 
 
 def main():
@@ -536,7 +531,6 @@ def main():
                 # print(np.shape(np_Y))
 
                 train_model.global_station_num = len(datasets[0].global_air[model_idx])
-                # For every station, run NUM_EPOCH baches
 
                 for i in range(FIRST_EPOCH):
                     print("In iteration ", i)
@@ -557,28 +551,60 @@ def main():
                 train_length = len(example_data) - 1
 
                 train_model.global_station_num = len(datasets[1].global_air[model_idx])
-
                 np_local_air = np.array(datasets[1].local_air_lstm_datas[model_idx])
                 np_local_weather = np.array(datasets[1].local_weather_lstm_datas[model_idx])
                 # swap axes so that we can first choose data by trained local station, then get data by bacth_idx
                 np_global_air = np.swapaxes(np.array(datasets[1].global_air_lstm_datas[model_idx]), 0, 1)
                 np_global_weather = np.swapaxes(np.array(datasets[1].global_weather_lstm_datas[model_idx]), 0, 1)
                 np_global_location = np.swapaxes(np.array(datasets[1].global_locations_datas[model_idx]), 0, 1)
+
                 np_Y = np.array(datasets[1].Y[model_idx])
 
+
                 for i in range(SECOND_EPOCH):
+                    # train/cv generate
+                    ####
+                    # randomly choose 20% batches to cv, and other 80% batches to train
+                    #
                     print("In iteration ", i)
+                    kfold_cnt = 0
+                    for train_idx, test_idx in KFold(n_splits=5).split(np_local_air):
+                        np_local_air_train = np_local_air[train_idx]
+                        np_local_weather_train = np_local_weather[train_idx]
+                        np_global_air_train = np_global_air[train_idx]
+                        np_global_weather_train = np_global_weather[train_idx]
+                        np_global_location_train = np_global_location[train_idx]
+                        np_Y_train = np_Y[train_idx]
+                        np_local_air_test = np_local_air[test_idx]
+                        np_local_weather_test = np_local_weather[test_idx]
+                        np_global_air_test = np_global_air[test_idx]
+                        np_global_weather_test = np_global_weather[test_idx]
+                        np_global_location_test = np_global_location[test_idx]
+                        np_Y_test = np_Y[test_idx]
 
-                    step, total_cost = run_epoch(sess, train_model, BATCH_COUNT, train_model.train_op, True, step,
-                                                 np_local_air, np_local_weather, np_global_air, np_global_weather,
-                                                 np_global_location, np_Y)
-                    print("Step: ", step)
-                    print(total_cost / BATCH_COUNT)
+                        train_batch_num = len(train_idx)
+                        test_batch_num = len(test_idx)
+
+                        # train
+                        step, total_cost = run_epoch(sess, train_model, train_batch_num, train_model.train_op, True, step,
+                                                     np_local_air_train, np_local_weather_train, np_global_air_train, np_global_weather_train,
+                                                     np_global_location_train, np_Y_train)
+
+                        print("Step: ", step)
+                        print("Train Cost of a batch:", total_cost / train_batch_num)
+                        saver.save(sess, './my_model-' + str(model_idx) + ".model", global_step=step)
+
+                        # cv test
+                        step, total_cost = run_epoch(sess, train_model, test_batch_num, train_model.train_op, True, step,
+                                                     np_local_air_test, np_local_weather_test, np_global_air_test, np_global_weather_test,
+                                                     np_global_location_test, np_Y_test, is_test=True)
+                        print("Step: ", step)
+                        print("CV[%d] Error of a batch:" % kfold_cnt, total_cost / test_batch_num)
+                        kfold_cnt += 1
 
 
 
 
-                saver.save(sess, './my_model-' + str(model_idx) + ".model", global_step=step)
 
 
 def predict():

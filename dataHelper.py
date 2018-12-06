@@ -128,6 +128,7 @@ def generate_lstm_data(inputs, batch_size = BATCH_SIZE, num_steps = NUM_STEPS, h
     else:
         return  X_batches
 
+
 def generate_weather_lstm_data(inputs, batch_size = BATCH_SIZE, num_steps = NUM_STEPS):
     columns = list(inputs)
     feature_num = len(columns)
