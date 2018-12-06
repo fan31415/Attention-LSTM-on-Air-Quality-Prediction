@@ -561,6 +561,7 @@ def main():
                 np_Y = np.array(datasets[1].Y[model_idx])
 
 
+                cv_err_history = np.array([])
                 for i in range(SECOND_EPOCH):
                     # train/cv generate
                     ####
@@ -568,6 +569,8 @@ def main():
                     #
                     print("In iteration ", i)
                     kfold_cnt = 0
+                    cv_errs = 0.0
+                    cv_batches = 0
                     for train_idx, test_idx in KFold(n_splits=5).split(np_local_air):
                         np_local_air_train = np_local_air[train_idx]
                         np_local_weather_train = np_local_weather[train_idx]
@@ -600,7 +603,16 @@ def main():
                                                      np_global_location_test, np_Y_test, is_test=True)
                         print("Step: ", step)
                         print("CV[%d] Error of a batch:" % kfold_cnt, total_cost / test_batch_num)
+                        cv_errs += total_cost
+                        cv_batches += test_batch_num
                         kfold_cnt += 1
+                    cv_avg_err = cv_errs/cv_batches
+
+                    if len(cv_err_history) > EARLY_STOP:
+                        if cv_avg_err > np.min(cv_err_history[-EARLY_STOP:]):
+                            print("Early Stop. Because loss not decrease for 50 epoches")
+                            break
+                    cv_err_history = np.append(cv_err_history, cv_avg_err)[-EARLY_STOP-1:]
 
 
 
