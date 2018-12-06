@@ -22,11 +22,13 @@ def high_level_fc(inputs, hidden_size=HIGH_LEVEL_FC_HIDDEN_SIZE, internal_hidden
         outputs = tf.contrib.layers.fully_connected(layer1, hidden_size)
     return outputs
 
+
 # only one fusion model, no need to share parameters
 def fusion_fc_layer(inputs, hidden_size = FUSION_LAYER_HIDDEN_SIZE):
     with tf.variable_scope("fusion_layer_fc"):
         outputs = tf.contrib.layers.fully_connected(inputs, hidden_size)
     return outputs
+
 
 # inputs shape is [batch_size, hidden_size]
 # output shape is [batch_size, label_size]
@@ -39,8 +41,8 @@ def predict_layer(inputs, hidden_size = PREDICT_LAYER_HIDDEN_SIZE):
         # outputs = tf.tensordot(inputs, weight, [[1], [0]])
         outputs = tf.matmul(inputs, weight)
         outputs = tf.add(outputs, bias)
-
     return outputs
+
 
 def attention_chosen_layer(inputs, hidden_size = ATTENTION_CHOSEN_HIDDEN_SIZE):
     with tf.variable_scope("attention_chosen"):
@@ -49,6 +51,7 @@ def attention_chosen_layer(inputs, hidden_size = ATTENTION_CHOSEN_HIDDEN_SIZE):
 
 # inputs should be a vector from last layer's output
 # because of batch training, this actually will be a matrix [batch_size, hidden_size]
+
 
 # we need cancat inputs and local_inputs, so the actuall input shape is [batch_size, hidden_size1 + hidden_size2]
 def get_attention_raw_score(inputs, local_inputs, batch_size, hidden_size1, hidden_size2):
@@ -73,6 +76,7 @@ def get_attention_raw_score(inputs, local_inputs, batch_size, hidden_size1, hidd
 
         return output
 
+
 def get_attention_raw_score_solely(inputs, batch_size, hidden_size):
     # params
     # hidden_size: hidden_size for inputs
@@ -91,6 +95,7 @@ def get_attention_raw_score_solely(inputs, batch_size, hidden_size):
         output = tf.add(tf.tensordot(layer1, u, [[1], [0]]), bias2)
 
         return output
+
 
 # station_inputs shape [staion_count, batch_size, hidden_size]
 # local_inputs: [station_count, batch_size, hidden_size]
@@ -150,6 +155,7 @@ def attention_layer_uni_input(station_inputs, batch_size, hidden_size):
         # scores = tf.nn.softmax(scores, axis=0)
         # output = tf.reduce_sum(tf.multiply(scores, station_inputs))
         return output
+
 
 class LSTM_model(object):
     def __init__(self, inputs, batch_size=BATCH_SIZE, state_size=LSTM_HIDDEN_SIZE, layer_num=2):

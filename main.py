@@ -379,6 +379,11 @@ class FModel(object):
 
         self.train_op = tf.train.AdamOptimizer(LEARNING_RATE).minimize(self.cost)
         self.merged_summary = tf.summary.merge_all()
+
+        params = tf.trainable_variables()
+        for i in range(len(params)):
+            print(params[i].name)
+            print("\n")
         if self.sess is not None:
            self.train_writer = tf.summary.FileWriter('./logs/train/', sess.graph)
            self.test_writer = tf.summary.FileWriter('./logs/test')

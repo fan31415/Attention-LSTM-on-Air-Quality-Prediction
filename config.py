@@ -10,7 +10,7 @@ LEARNING_RATE = 0.005
 TOTAL_EPOCH = 1
 
 # the epoch on first dataset (2017)
-FIRST_EPOCH = 100
+FIRST_EPOCH = 50
 
 # the epoch on second dataset (2018)
 SECOND_EPOCH = 200
